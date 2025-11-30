@@ -31,48 +31,42 @@ async function checkAuth() {
     }
     
     try {
-        const response = await fetch(`${API_BASE}/api/auth/me`, {
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            }
-        });
+        // Get user info from localStorage (saved during login)
+        const userInfoStr = localStorage.getItem('user_info');
         
-        if (!response.ok) {
-            throw new Error('Authentication failed');
+        if (!userInfoStr) {
+            throw new Error('No user info in localStorage');
         }
         
-        const result = await response.json();
+        const user = JSON.parse(userInfoStr);
         
-        if (result.success && result.data) {
-            const user = result.data;
-            
-            // Update UI
-            if (authLoading) authLoading.classList.add('hidden');
-            if (authNotLoggedIn) authNotLoggedIn.classList.add('hidden');
-            if (authLoggedIn) authLoggedIn.classList.remove('hidden');
-            
-            // Update user info
-            if (document.getElementById('userName')) {
-                document.getElementById('userName').textContent = user.name || 'User';
-            }
-            if (document.getElementById('userEmail')) {
-                document.getElementById('userEmail').textContent = user.email || '';
-            }
-            
-            // Show admin button for super admin
-            if (user.email === 'hompystory@gmail.com' && document.getElementById('adminButton')) {
-                document.getElementById('adminButton').classList.remove('hidden');
-            }
-            
-            console.log('✅ User authenticated:', user.email);
-            return user;
+        // Update UI
+        if (authLoading) authLoading.classList.add('hidden');
+        if (authNotLoggedIn) authNotLoggedIn.classList.add('hidden');
+        if (authLoggedIn) authLoggedIn.classList.remove('hidden');
+        
+        // Update user info
+        if (document.getElementById('userName')) {
+            document.getElementById('userName').textContent = user.name || 'User';
         }
+        if (document.getElementById('userEmail')) {
+            document.getElementById('userEmail').textContent = user.email || '';
+        }
+        
+        // Show admin button for super admin
+        if (user.email === 'hompystory@gmail.com' && document.getElementById('adminButton')) {
+            document.getElementById('adminButton').classList.remove('hidden');
+        }
+        
+        console.log('✅ User authenticated:', user.email);
+        return user;
+        
     } catch (error) {
         console.error('❌ Auth check failed:', error);
         localStorage.removeItem('jwt_token');
         localStorage.removeItem('auth_token');
         localStorage.removeItem('token');
+        localStorage.removeItem('user_info');
         
         if (authLoading) authLoading.classList.add('hidden');
         if (authNotLoggedIn) authNotLoggedIn.classList.remove('hidden');
