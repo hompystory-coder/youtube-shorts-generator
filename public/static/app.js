@@ -164,16 +164,14 @@ async function handleCrawlBlog() {
             const blogText = result.data.text || '';
             
             console.log(`✅ Crawled ${blogImages.length} images`);
+            console.log('Images data:', blogImages.slice(0, 2));
             
             // Display images
             displayBlogImages(blogImages);
             
-            // Move to next step
-            updateStep(2);
-            
-            alert(`${blogImages.length}개의 이미지를 찾았습니다.`);
+            alert(`${blogImages.length}개의 이미지를 찾았습니다. 원하는 이미지를 선택하세요.`);
         } else {
-            throw new Error(result.message || 'Crawling failed');
+            throw new Error(result.message || result.error || 'Crawling failed');
         }
     } catch (error) {
         console.error('❌ Crawl error:', error);
