@@ -377,7 +377,7 @@
         // 인증 확인
         async function checkAuth() {
             console.log('🔐 인증 확인...');
-            const authToken = localStorage.getItem('jwt_token') || localStorage.getItem('jwt_token') || localStorage.getItem('auth_token');
+            const authToken = localStorage.getItem('jwt_token') || localStorage.getItem('auth_token');
             if (!authToken) {
                 console.log('❌ 토큰 없음');
                 window.location.href = '/login.html';
@@ -385,25 +385,25 @@
             }
 
             try {
-                const response = await fetch(`${API_BASE}/api/auth/me`, {
-                    headers: { 'Authorization': `Bearer ${authToken}` }
-                });
-
-                if (!response.ok) throw new Error('인증 실패');
-
-                const data = await response.json();
-                console.log('✅ 사용자 데이터:', data);
+                // Get user info from localStorage (saved during login)
+                const userInfoStr = localStorage.getItem('user_info');
                 
-                if (data.success) {
-                    currentUser = data.data;
-                    displayUserInfo(currentUser);
-                    await loadUserStats();
-                } else {
-                    throw new Error('인증 실패');
+                if (!userInfoStr) {
+                    throw new Error('사용자 정보 없음');
                 }
+                
+                const user = JSON.parse(userInfoStr);
+                console.log('✅ 사용자 데이터:', user);
+                
+                currentUser = user;
+                displayUserInfo(currentUser);
+                await loadUserStats();
+                
             } catch (error) {
                 console.error('❌ 인증 에러:', error);
-                localStorage.removeItem('jwt_token'); localStorage.removeItem('auth_token');
+                localStorage.removeItem('jwt_token'); 
+                localStorage.removeItem('auth_token');
+                localStorage.removeItem('user_info');
                 window.location.href = '/login.html';
             }
         }

@@ -733,7 +733,18 @@ TTS 음성 생성을 위한 깔끔한 내레이션 텍스트만 작성하세요.
         // 구독 상태 확인 및 표시
         async function checkSubscriptionStatus() {
             try {
-                const response = await fetch('/api/subscription/status', { credentials: 'include' });
+                const authToken = localStorage.getItem('jwt_token') || localStorage.getItem('auth_token');
+                if (!authToken) {
+                    console.log('⚠️ No auth token for subscription check');
+                    return;
+                }
+                
+                const response = await fetch('/api/subscription/status', { 
+                    credentials: 'include',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
                 if (!response.ok) {
                     console.log('⚠️ Subscription status check failed');
                     return;
