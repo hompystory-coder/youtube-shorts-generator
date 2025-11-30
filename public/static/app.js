@@ -549,3 +549,20 @@ if (typeof closePricingModal === 'undefined') {
 }
 
 console.log('✅ App.js initialized');
+
+// Preview voice function
+function previewVoice() {
+    console.log('🎤 Preview voice clicked');
+    alert('음성 미리듣기 기능은 준비 중입니다.');
+}
+
+// Stage change handler (placeholder)
+function onStageChanged(stage) {
+    console.log('📍 Stage changed:', stage);
+}
+
+// Make functions globally accessible
+window.previewVoice = previewVoice;
+window.onStageChanged = onStageChanged;
+
+console.log('✅ Global functions registered');
