@@ -157,19 +157,37 @@ async function handleCrawlBlog() {
             body: JSON.stringify({ url: blogUrl })
         });
         
+        console.log('📡 Response status:', response.status);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const result = await response.json();
+        console.log('📦 API Response:', { success: result.success, imageCount: result.data?.images?.length });
         
         if (result.success && result.data) {
             blogImages = result.data.images || [];
             const blogText = result.data.text || '';
             
             console.log(`✅ Crawled ${blogImages.length} images`);
-            console.log('Images data:', blogImages.slice(0, 2));
             
-            // Display images
-            displayBlogImages(blogImages);
-            
-            alert(`${blogImages.length}개의 이미지를 찾았습니다. 원하는 이미지를 선택하세요.`);
+            if (blogImages.length > 0) {
+                console.log('First image:', blogImages[0]);
+                
+                // Display images
+                try {
+                    displayBlogImages(blogImages);
+                    console.log('✅ Images displayed successfully');
+                } catch (displayError) {
+                    console.error('❌ Display error:', displayError);
+                    throw displayError;
+                }
+                
+                alert(`${blogImages.length}개의 이미지를 찾았습니다. 원하는 이미지를 선택하세요.`);
+            } else {
+                throw new Error('크롤링된 이미지가 없습니다.');
+            }
         } else {
             throw new Error(result.message || result.error || 'Crawling failed');
         }
@@ -177,21 +195,27 @@ async function handleCrawlBlog() {
         console.error('❌ Crawl error:', error);
         alert('블로그 크롤링에 실패했습니다: ' + error.message);
     } finally {
-        // Reset button
+        // Reset button - ALWAYS runs
+        console.log('🔄 Resetting button...');
         if (crawlBtn) {
             crawlBtn.disabled = false;
-            crawlBtn.innerHTML = '<i class="fas fa-search mr-2"></i>크롤링 시작';
+            crawlBtn.innerHTML = '<i class="fas fa-search mr-2"></i>블로그 크롤링 시작';
         }
+        console.log('✅ Button reset complete');
     }
 }
 
 // Display blog images
 function displayBlogImages(images) {
+    console.log('🎨 displayBlogImages called with', images.length, 'images');
+    
     const container = document.getElementById('crawledImagesContainer');
     if (!container) {
         console.error('❌ crawledImagesContainer not found');
-        return;
+        throw new Error('Container element not found');
     }
+    
+    console.log('✅ Container found:', container);
     
     // Show container
     container.classList.remove('hidden');
@@ -201,33 +225,49 @@ function displayBlogImages(images) {
     const grid = document.createElement('div');
     grid.className = 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4';
     
+    let successCount = 0;
+    
     images.forEach((img, index) => {
-        // Handle both string URLs and image objects {url: "...", alt: "", index: 0}
-        const imgUrl = typeof img === 'string' ? img : img.url;
-        
-        const div = document.createElement('div');
-        div.className = 'relative cursor-pointer border-4 border-transparent hover:border-blue-500 rounded-lg transition image-item';
-        div.innerHTML = `
-            <img src="${imgUrl}" alt="Image ${index + 1}" class="w-full h-48 object-cover rounded-lg" onerror="this.parentElement.parentElement.style.display='none'">
-            <div class="absolute top-2 right-2 bg-white rounded-full w-8 h-8 flex items-center justify-center shadow">
-                <input type="checkbox" class="w-5 h-5 image-checkbox" data-index="${index}" data-url="${imgUrl}">
-            </div>
-            <div class="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
-                ${index + 1}
-            </div>
-        `;
-        
-        grid.appendChild(div);
+        try {
+            // Handle both string URLs and image objects {url: "...", alt: "", index: 0}
+            const imgUrl = typeof img === 'string' ? img : img.url;
+            
+            if (!imgUrl) {
+                console.warn(`⚠️ Image ${index} has no URL`);
+                return;
+            }
+            
+            const div = document.createElement('div');
+            div.className = 'relative cursor-pointer border-4 border-transparent hover:border-blue-500 rounded-lg transition image-item';
+            div.innerHTML = `
+                <img src="${imgUrl}" alt="Image ${index + 1}" class="w-full h-48 object-cover rounded-lg" onerror="this.parentElement.parentElement.style.display='none'">
+                <div class="absolute top-2 right-2 bg-white rounded-full w-8 h-8 flex items-center justify-center shadow">
+                    <input type="checkbox" class="w-5 h-5 image-checkbox" data-index="${index}" data-url="${imgUrl}">
+                </div>
+                <div class="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
+                    ${index + 1}
+                </div>
+            `;
+            
+            grid.appendChild(div);
+            successCount++;
+        } catch (itemError) {
+            console.error(`❌ Error creating image item ${index}:`, itemError);
+        }
     });
     
     container.appendChild(grid);
+    console.log(`✅ Grid appended to container, ${successCount} items created`);
     
     // Add checkbox listeners
-    document.querySelectorAll('.image-checkbox').forEach(checkbox => {
+    const checkboxes = document.querySelectorAll('.image-checkbox');
+    console.log(`📝 Found ${checkboxes.length} checkboxes`);
+    
+    checkboxes.forEach(checkbox => {
         checkbox.addEventListener('change', handleImageSelection);
     });
     
-    console.log(`✅ Displayed ${images.length} images in grid`);
+    console.log(`✅ Displayed ${successCount} images in grid`);
 }
 
 // Handle image selection
