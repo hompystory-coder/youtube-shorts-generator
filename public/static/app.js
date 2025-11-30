@@ -189,28 +189,47 @@ async function handleCrawlBlog() {
 
 // Display blog images
 function displayBlogImages(images) {
-    const container = document.getElementById('imageGrid');
-    if (!container) return;
+    const container = document.getElementById('crawledImagesContainer');
+    if (!container) {
+        console.error('❌ crawledImagesContainer not found');
+        return;
+    }
     
+    // Show container
+    container.classList.remove('hidden');
     container.innerHTML = '';
     
-    images.forEach((imgUrl, index) => {
+    // Create grid
+    const grid = document.createElement('div');
+    grid.className = 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4';
+    
+    images.forEach((img, index) => {
+        // Handle both string URLs and image objects {url: "...", alt: "", index: 0}
+        const imgUrl = typeof img === 'string' ? img : img.url;
+        
         const div = document.createElement('div');
-        div.className = 'relative cursor-pointer border-4 border-transparent hover:border-blue-500 rounded-lg transition';
+        div.className = 'relative cursor-pointer border-4 border-transparent hover:border-blue-500 rounded-lg transition image-item';
         div.innerHTML = `
-            <img src="${imgUrl}" alt="Image ${index + 1}" class="w-full h-48 object-cover rounded-lg">
+            <img src="${imgUrl}" alt="Image ${index + 1}" class="w-full h-48 object-cover rounded-lg" onerror="this.parentElement.parentElement.style.display='none'">
             <div class="absolute top-2 right-2 bg-white rounded-full w-8 h-8 flex items-center justify-center shadow">
                 <input type="checkbox" class="w-5 h-5 image-checkbox" data-index="${index}" data-url="${imgUrl}">
             </div>
+            <div class="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
+                ${index + 1}
+            </div>
         `;
         
-        container.appendChild(div);
+        grid.appendChild(div);
     });
+    
+    container.appendChild(grid);
     
     // Add checkbox listeners
     document.querySelectorAll('.image-checkbox').forEach(checkbox => {
         checkbox.addEventListener('change', handleImageSelection);
     });
+    
+    console.log(`✅ Displayed ${images.length} images in grid`);
 }
 
 // Handle image selection
