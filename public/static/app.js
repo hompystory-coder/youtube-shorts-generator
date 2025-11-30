@@ -561,8 +561,135 @@ function onStageChanged(stage) {
     console.log('📍 Stage changed:', stage);
 }
 
+// Blog crawling function
+async function crawlBlog() {
+    console.log('🔍 crawlBlog function called');
+    
+    const blogUrlInput = document.getElementById('blogUrl');
+    const crawlButton = document.querySelector('button[onclick="crawlBlog()"]');
+    const container = document.getElementById('crawledImagesContainer');
+    
+    if (!blogUrlInput || !blogUrlInput.value.trim()) {
+        alert('블로그 URL을 입력해주세요.');
+        return;
+    }
+    
+    const blogUrl = blogUrlInput.value.trim();
+    console.log('📝 Blog URL:', blogUrl);
+    
+    // Disable button
+    if (crawlButton) {
+        crawlButton.disabled = true;
+        crawlButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>크롤링 중...';
+    }
+    
+    try {
+        console.log('📡 Calling API...');
+        const response = await fetch(`${API_BASE}/api/crawl/blog`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ url: blogUrl })
+        });
+        
+        console.log('📦 Response status:', response.status);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        console.log('📦 API Response:', result);
+        
+        if (result.success && result.data && result.data.images) {
+            const images = result.data.images;
+            console.log(`✅ Found ${images.length} images`);
+            
+            // Display images
+            displayBlogImages(images);
+            
+            alert(`✅ ${images.length}개의 이미지를 찾았습니다!`);
+        } else {
+            throw new Error('Invalid response format');
+        }
+        
+    } catch (error) {
+        console.error('❌ Crawling error:', error);
+        alert(`❌ 크롤링 실패: ${error.message}`);
+        
+        if (container) {
+            container.style.display = 'none';
+        }
+    } finally {
+        // Reset button
+        if (crawlButton) {
+            crawlButton.disabled = false;
+            crawlButton.innerHTML = '<i class="fas fa-download mr-2"></i>블로그 크롤링 시작';
+        }
+        console.log('✅ crawlBlog completed');
+    }
+}
+
+// Display blog images function
+function displayBlogImages(images) {
+    console.log('🎨 displayBlogImages called with', images.length, 'images');
+    
+    const container = document.getElementById('crawledImagesContainer');
+    if (!container) {
+        console.error('❌ Container not found: crawledImagesContainer');
+        return;
+    }
+    
+    // Clear existing content
+    container.innerHTML = '';
+    
+    // Create grid
+    const grid = document.createElement('div');
+    grid.className = 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4';
+    
+    images.forEach((img, index) => {
+        const imageUrl = typeof img === 'string' ? img : img.url;
+        
+        if (!imageUrl) {
+            console.warn('⚠️ Invalid image at index', index, img);
+            return;
+        }
+        
+        const imageCard = document.createElement('div');
+        imageCard.className = 'relative border rounded-lg p-2 hover:border-blue-500 cursor-pointer';
+        imageCard.innerHTML = `
+            <input type="checkbox" class="absolute top-3 right-3 w-5 h-5" data-image-url="${imageUrl}">
+            <img src="${imageUrl}" alt="Image ${index + 1}" class="w-full h-32 object-cover rounded" onerror="this.parentElement.style.display='none'">
+            <p class="text-xs text-gray-600 mt-1 text-center">#${index + 1}</p>
+        `;
+        
+        // Add click handler for checkbox
+        const checkbox = imageCard.querySelector('input[type="checkbox"]');
+        checkbox.addEventListener('change', (e) => {
+            if (e.target.checked) {
+                if (!selectedImages.includes(imageUrl)) {
+                    selectedImages.push(imageUrl);
+                }
+            } else {
+                selectedImages = selectedImages.filter(url => url !== imageUrl);
+            }
+            console.log('📌 Selected images:', selectedImages.length);
+        });
+        
+        grid.appendChild(imageCard);
+    });
+    
+    container.appendChild(grid);
+    container.style.display = 'block';
+    
+    console.log(`✅ Displayed ${images.length} images in grid`);
+}
+
 // Make functions globally accessible
 window.previewVoice = previewVoice;
 window.onStageChanged = onStageChanged;
+window.crawlBlog = crawlBlog;
+window.displayBlogImages = displayBlogImages;
 
 console.log('✅ Global functions registered');
