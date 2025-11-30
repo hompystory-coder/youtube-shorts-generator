@@ -683,25 +683,21 @@ TTS 음성 생성을 위한 깔끔한 내레이션 텍스트만 작성하세요.
                     return;
                 }
                 
-                // Get current user info to extract userId
-                const userResponse = await fetch('/api/auth/me', {
-                    headers: { 'Authorization': 'Bearer ' + authToken }
-                });
+                // Get userId from localStorage (saved during login)
+                const userInfoStr = localStorage.getItem('user_info');
+                let userId = 'admin_001'; // Default fallback
                 
-                if (!userResponse.ok) {
-                    console.log('⚠️ Failed to get user info');
-                    return;
+                if (userInfoStr) {
+                    try {
+                        const userInfo = JSON.parse(userInfoStr);
+                        userId = userInfo.id || userId;
+                        console.log('✅ User ID from localStorage:', userId);
+                    } catch (e) {
+                        console.log('⚠️ Failed to parse user_info, using default');
+                    }
+                } else {
+                    console.log('⚠️ No user_info in localStorage, using default ID');
                 }
-                
-                const userData = await userResponse.json();
-                
-                // Fix: userData.data.id (not userData.user.id)
-                if (!userData.success || !userData.data) {
-                    console.log('⚠️ Invalid user data response');
-                    return;
-                }
-                
-                const userId = userData.data.id;
                 
                 // Fetch user settings
                 const settingsResponse = await fetch('/api/settings/' + userId);
