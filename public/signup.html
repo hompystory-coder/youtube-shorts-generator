@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>회원가입 - 숏츠 생성기</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-purple-50 min-h-screen flex items-center justify-center p-4">
+    <div class="max-w-md w-full">
+        <!-- 로고 -->
+        <div class="text-center mb-8">
+            <div class="inline-block bg-white p-4 rounded-full shadow-lg mb-4">
+                <i class="fas fa-video text-5xl text-blue-600"></i>
+            </div>
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">숏츠 생성기</h1>
+            <p class="text-gray-600">무료 체험으로 시작하세요!</p>
+        </div>
+
+        <!-- 회원가입 폼 -->
+        <div class="bg-white rounded-2xl shadow-2xl p-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">
+                <i class="fas fa-user-plus mr-2 text-blue-600"></i>
+                회원가입
+            </h2>
+
+            <!-- 무료 체험 안내 -->
+            <div class="bg-blue-50 border-2 border-blue-300 rounded-lg p-4 mb-6">
+                <div class="flex items-center gap-2 mb-2">
+                    <i class="fas fa-gift text-2xl text-blue-600"></i>
+                    <p class="font-bold text-blue-900">3일 무료 체험!</p>
+                </div>
+                <ul class="text-sm text-blue-800 space-y-1">
+                    <li><i class="fas fa-check mr-1"></i>회원가입 즉시 시작</li>
+                    <li><i class="fas fa-check mr-1"></i>모든 기능 무제한 사용</li>
+                    <li><i class="fas fa-check mr-1"></i>신용카드 등록 불필요</li>
+                </ul>
+            </div>
+
+            <form id="signupForm" class="space-y-4">
+                <!-- 이름 -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-user mr-1"></i>
+                        이름
+                    </label>
+                    <input type="text" id="name" name="name" required
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="홍길동">
+                </div>
+
+                <!-- 이메일 -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-envelope mr-1"></i>
+                        이메일
+                    </label>
+                    <input type="email" id="email" name="email" required
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="example@email.com">
+                </div>
+
+                <!-- 비밀번호 -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-lock mr-1"></i>
+                        비밀번호
+                    </label>
+                    <div class="relative">
+                        <input type="password" id="password" name="password" required
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="8자 이상 입력해주세요" minlength="8">
+                        <button type="button" onclick="togglePassword('password')"
+                            class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-eye" id="password-icon"></i>
+                        </button>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        최소 8자 이상 입력해주세요
+                    </p>
+                </div>
+
+                <!-- 비밀번호 확인 -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-lock mr-1"></i>
+                        비밀번호 확인
+                    </label>
+                    <div class="relative">
+                        <input type="password" id="passwordConfirm" name="passwordConfirm" required
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="비밀번호를 다시 입력해주세요" minlength="8">
+                        <button type="button" onclick="togglePassword('passwordConfirm')"
+                            class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-eye" id="passwordConfirm-icon"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 에러 메시지 -->
+                <div id="errorMessage" class="hidden bg-red-50 border border-red-300 text-red-700 px-4 py-3 rounded-lg">
+                    <i class="fas fa-exclamation-circle mr-2"></i>
+                    <span id="errorText"></span>
+                </div>
+
+                <!-- 회원가입 버튼 -->
+                <button type="submit" id="signupButton"
+                    class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-6 rounded-lg font-bold text-lg hover:from-blue-700 hover:to-purple-700 transition shadow-lg">
+                    <i class="fas fa-user-plus mr-2"></i>
+                    회원가입
+                </button>
+            </form>
+
+            <!-- 로그인 링크 -->
+            <div class="mt-6 text-center">
+                <p class="text-gray-600">
+                    이미 계정이 있으신가요?
+                    <a href="/login.html" class="text-blue-600 hover:text-blue-700 font-semibold">
+                        로그인하기
+                    </a>
+                </p>
+            </div>
+        </div>
+
+        <!-- 홈으로 -->
+        <div class="mt-6 text-center">
+            <a href="/" class="text-gray-600 hover:text-gray-800">
+                <i class="fas fa-arrow-left mr-2"></i>
+                홈으로 돌아가기
+            </a>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = window.location.origin;
+
+        // 비밀번호 표시/숨김
+        function togglePassword(fieldId) {
+            const field = document.getElementById(fieldId);
+            const icon = document.getElementById(fieldId + '-icon');
+            
+            if (field.type === 'password') {
+                field.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                field.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+
+        // 회원가입 처리
+        document.getElementById('signupForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const name = document.getElementById('name').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const passwordConfirm = document.getElementById('passwordConfirm').value;
+            
+            // 유효성 검사
+            if (!name || !email || !password) {
+                showError('모든 필드를 입력해주세요.');
+                return;
+            }
+            
+            if (password.length < 8) {
+                showError('비밀번호는 최소 8자 이상이어야 합니다.');
+                return;
+            }
+            
+            if (password !== passwordConfirm) {
+                showError('비밀번호가 일치하지 않습니다.');
+                return;
+            }
+            
+            // 버튼 비활성화
+            const button = document.getElementById('signupButton');
+            button.disabled = true;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>가입 중...';
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/auth/signup`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || '회원가입에 실패했습니다.');
+                }
+                
+                // 토큰 저장 (jwt_token으로 통일)
+                localStorage.setItem('jwt_token', data.token);
+                console.log('✅ JWT token saved successfully');
+                
+                // 사용자 정보도 저장
+                if (data.user) {
+                    localStorage.setItem('user_info', JSON.stringify(data.user));
+                    console.log('✅ User info saved:', data.user.email);
+                }
+                
+                // 쿠키 저장
+                const expiryDate = new Date();
+                expiryDate.setDate(expiryDate.getDate() + 30);
+                document.cookie = `auth_token=${data.token}; path=/; expires=${expiryDate.toUTCString()}; SameSite=Lax`;
+                
+                // 성공 메시지 표시 후 홈으로 이동
+                alert('✅ 회원가입 성공! 3일 무료 체험이 시작되었습니다.');
+                window.location.href = '/';
+                
+            } catch (error) {
+                showError(error.message);
+                button.disabled = false;
+                button.innerHTML = '<i class="fas fa-user-plus mr-2"></i>회원가입';
+            }
+        });
+
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            const errorText = document.getElementById('errorText');
+            errorText.textContent = message;
+            errorDiv.classList.remove('hidden');
+            
+            // 5초 후 자동 숨김
+            setTimeout(() => {
+                errorDiv.classList.add('hidden');
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

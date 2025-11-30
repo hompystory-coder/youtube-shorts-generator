@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>구독 결제 - 숏츠 생성기</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- PAYAPP SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+</head>
+<body class="bg-gradient-to-br from-purple-50 to-pink-50 min-h-screen">
+    <!-- 헤더 -->
+    <header class="bg-white shadow-md sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <a href="/" class="text-2xl font-bold text-purple-600">
+                <i class="fas fa-video mr-2"></i>
+                숏츠 생성기
+            </a>
+            <a href="/" class="px-6 py-2 bg-purple-600 text-white rounded-full hover:bg-purple-700 transition">
+                <i class="fas fa-home mr-2"></i>
+                홈으로
+            </a>
+        </div>
+    </header>
+
+    <!-- 메인 컨텐츠 -->
+    <div class="container mx-auto px-4 py-12">
+        <h1 class="text-4xl font-bold text-center text-gray-800 mb-12">
+            <i class="fas fa-crown text-yellow-500 mr-3"></i>
+            구독 결제
+        </h1>
+
+        <!-- 로딩 상태 -->
+        <div id="loadingState" class="text-center py-12">
+            <div class="inline-block">
+                <i class="fas fa-spinner fa-spin text-6xl text-purple-600 mb-4"></i>
+                <p class="text-xl text-gray-600">구독 정보 불러오는 중...</p>
+            </div>
+        </div>
+
+        <!-- 구독 플랜 선택 -->
+        <div id="planSelection" class="hidden">
+            <div class="max-w-5xl mx-auto">
+                <!-- 특별 제공 배지 -->
+                <div class="text-center mb-8">
+                    <span class="inline-block bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-6 py-2 rounded-full font-bold text-lg shadow-lg">
+                        ⭐ 구독 특별 선택
+                    </span>
+                </div>
+
+                <!-- 플랜 카드 -->
+                <div class="grid md:grid-cols-3 gap-6 mb-12">
+                    <!-- 테스트 플랜 (1,000원) -->
+                    <div class="bg-white rounded-3xl shadow-2xl p-6 border-4 border-green-300 hover:border-green-500 transition transform hover:scale-105 relative">
+                        <!-- 테스트 배지 -->
+                        <div class="absolute -top-3 -right-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white px-4 py-1 rounded-full font-bold shadow-lg text-sm">
+                            🧪 테스트
+                        </div>
+                        
+                        <div class="text-center mb-4">
+                            <h3 class="text-xl font-bold text-gray-700 mb-2">테스트 플랜</h3>
+                            <div class="text-4xl font-bold text-green-600 mb-2">
+                                1,000원
+                            </div>
+                            <p class="text-sm text-gray-600 mb-3">결제 테스트용 (1일)</p>
+                            <button onclick="selectPlan('test', 1000)" 
+                                class="mt-2 w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-3 px-6 rounded-xl font-bold text-base hover:from-green-700 hover:to-emerald-700 transition shadow-lg">
+                                테스트 선택
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 월간 구독 -->
+                    <div class="bg-white rounded-3xl shadow-2xl p-6 border-4 border-purple-200 hover:border-purple-400 transition transform hover:scale-105">
+                        <div class="text-center mb-4">
+                            <h3 class="text-xl font-bold text-gray-700 mb-2">월간 구독</h3>
+                            <div class="text-4xl font-bold text-purple-600 mb-2">
+                                33,000원
+                                <span class="text-lg text-gray-500">/월</span>
+                            </div>
+                            <p class="text-sm text-gray-600 mb-3">매월 자동 갱신</p>
+                            <button onclick="selectPlan('monthly', 33000)" 
+                                class="mt-2 w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 px-6 rounded-xl font-bold text-base hover:from-purple-700 hover:to-pink-700 transition shadow-lg">
+                                월간 선택
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 연간 구독 (할인) -->
+                    <div class="bg-white rounded-3xl shadow-2xl p-6 border-4 border-pink-400 hover:border-pink-600 transition transform hover:scale-105 relative">
+                        <!-- 할인 배지 -->
+                        <div class="absolute -top-3 -right-3 bg-gradient-to-r from-pink-500 to-red-500 text-white px-4 py-1 rounded-full font-bold shadow-lg text-sm">
+                            25% 할인!
+                        </div>
+                        
+                        <div class="text-center mb-4">
+                            <h3 class="text-xl font-bold text-gray-700 mb-2">연간 구독</h3>
+                            <div class="mb-1">
+                                <span class="text-2xl text-gray-400 line-through">396,000원</span>
+                            </div>
+                            <div class="text-4xl font-bold text-pink-600 mb-2">
+                                297,000원
+                                <span class="text-lg text-gray-500">/년</span>
+                            </div>
+                            <p class="text-sm text-green-600 font-semibold mb-3">99,000원 절약!</p>
+                            <button onclick="selectPlan('yearly', 297000)" 
+                                class="mt-2 w-full bg-gradient-to-r from-pink-600 to-purple-600 text-white py-3 px-6 rounded-xl font-bold text-base hover:from-pink-700 hover:to-purple-700 transition shadow-lg">
+                                연간 선택
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 선택된 플랜 정보 -->
+                <div id="selectedPlanInfo" class="hidden bg-gradient-to-r from-purple-100 to-pink-100 rounded-2xl p-6 mb-8 border-2 border-purple-300">
+                    <h4 class="text-xl font-bold text-gray-800 mb-4">
+                        <i class="fas fa-check-circle text-green-500 mr-2"></i>
+                        선택한 플랜: <span id="selectedPlanName"></span>
+                    </h4>
+                    <p class="text-2xl font-bold text-purple-700">
+                        결제 금액: <span id="selectedPlanPrice"></span>
+                    </p>
+                </div>
+
+                <!-- 프리미엄 가능 -->
+                <div class="bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl p-8 text-white mb-8">
+                    <h3 class="text-2xl font-bold mb-6 flex items-center">
+                        <i class="fas fa-star text-yellow-300 mr-3"></i>
+                        프리미엄 기능
+                    </h3>
+                    <ul class="space-y-4">
+                        <li class="flex items-center text-lg">
+                            <i class="fas fa-check-circle text-green-300 mr-3"></i>
+                            무제한 쇼츠 영상 생성
+                        </li>
+                        <li class="flex items-center text-lg">
+                            <i class="fas fa-check-circle text-green-300 mr-3"></i>
+                            AI 지능 자동 생성
+                        </li>
+                        <li class="flex items-center text-lg">
+                            <i class="fas fa-check-circle text-green-300 mr-3"></i>
+                            배경 음악 및 미이지 추가
+                        </li>
+                        <li class="flex items-center text-lg">
+                            <i class="fas fa-check-circle text-green-300 mr-3"></i>
+                            글이우는 자정 및 다운로드
+                        </li>
+                        <li class="flex items-center text-lg">
+                            <i class="fas fa-check-circle text-green-300 mr-3"></i>
+                            우선 지원
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- 결제 방법 선택 -->
+                <div class="bg-white rounded-2xl shadow-xl p-8">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                        <i class="fas fa-credit-card text-purple-600 mr-3"></i>
+                        결제 방법 선택
+                    </h3>
+                    
+                    <div class="space-y-4">
+                        <!-- 무통장 입금 -->
+                        <button onclick="selectPaymentMethod('bank')" 
+                            class="payment-method-btn w-full flex items-center justify-between p-6 border-2 border-gray-300 rounded-xl hover:border-purple-500 hover:bg-purple-50 transition">
+                            <div class="flex items-center">
+                                <i class="fas fa-building-columns text-3xl text-blue-600 mr-4"></i>
+                                <div class="text-left">
+                                    <h4 class="text-lg font-bold text-gray-800">무통장 입금</h4>
+                                    <p class="text-sm text-gray-600">입금 후 즉시 운영자 승인 (1~2시간 소요)</p>
+                                </div>
+                            </div>
+                            <i class="fas fa-chevron-right text-gray-400"></i>
+                        </button>
+
+                        <!-- 간편결제 -->
+                        <button onclick="selectPaymentMethod('card')" 
+                            class="payment-method-btn w-full flex items-center justify-between p-6 border-2 border-gray-300 rounded-xl hover:border-purple-500 hover:bg-purple-50 transition">
+                            <div class="flex items-center">
+                                <i class="fas fa-credit-card text-3xl text-green-600 mr-4"></i>
+                                <div class="text-left">
+                                    <h4 class="text-lg font-bold text-gray-800">간편결제</h4>
+                                    <p class="text-sm text-gray-600">카카오페이, 네이버페이, 카드 등</p>
+                                </div>
+                            </div>
+                            <i class="fas fa-chevron-right text-gray-400"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 로그인 필요 메시지 -->
+        <div id="needLoginState" class="hidden max-w-2xl mx-auto text-center">
+            <div class="bg-white rounded-2xl shadow-2xl p-12">
+                <i class="fas fa-lock text-6xl text-gray-400 mb-6"></i>
+                <h2 class="text-3xl font-bold text-gray-800 mb-4">로그인이 필요합니다</h2>
+                <p class="text-xl text-gray-600 mb-8">구독 결제를 위해서는 먼저 로그인해주세요.</p>
+                <div class="space-y-4">
+                    <a href="/login.html" 
+                        class="block w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 px-8 rounded-xl font-bold text-lg hover:from-blue-700 hover:to-purple-700 transition shadow-lg">
+                        <i class="fas fa-sign-in-alt mr-2"></i>
+                        로그인하기
+                    </a>
+                    <a href="/signup.html" 
+                        class="block w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-4 px-8 rounded-xl font-bold text-lg hover:from-green-700 hover:to-emerald-700 transition shadow-lg">
+                        <i class="fas fa-user-plus mr-2"></i>
+                        무료로 시작하기 (3일 무료 체험)
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 무통장 입금 모달 -->
+    <div id="bankTransferModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-2xl w-full">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold text-gray-800">
+                    <i class="fas fa-building-columns text-blue-600 mr-2"></i>
+                    무통장 입금 안내
+                </h3>
+                <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+            </div>
+
+            <div class="bg-blue-50 border-2 border-blue-300 rounded-xl p-6 mb-6">
+                <h4 class="text-xl font-bold text-blue-800 mb-4">입금 계좌 정보</h4>
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center bg-white p-4 rounded-lg">
+                        <span class="text-gray-700 font-semibold">은행</span>
+                        <span class="text-gray-900 font-bold text-lg">국민은행</span>
+                    </div>
+                    <div class="flex justify-between items-center bg-white p-4 rounded-lg">
+                        <span class="text-gray-700 font-semibold">계좌번호</span>
+                        <span class="text-gray-900 font-bold text-lg">123-456-789012</span>
+                    </div>
+                    <div class="flex justify-between items-center bg-white p-4 rounded-lg">
+                        <span class="text-gray-700 font-semibold">예금주</span>
+                        <span class="text-gray-900 font-bold text-lg">숏츠생성기</span>
+                    </div>
+                    <div class="flex justify-between items-center bg-white p-4 rounded-lg">
+                        <span class="text-gray-700 font-semibold">입금액</span>
+                        <span class="text-purple-600 font-bold text-2xl" id="modalPaymentAmount"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-yellow-50 border-2 border-yellow-300 rounded-xl p-6 mb-6">
+                <h4 class="text-lg font-bold text-yellow-800 mb-3 flex items-center">
+                    <i class="fas fa-exclamation-triangle mr-2"></i>
+                    입금 시 주의사항
+                </h4>
+                <ul class="space-y-2 text-gray-700">
+                    <li class="flex items-start">
+                        <i class="fas fa-check text-green-600 mr-2 mt-1"></i>
+                        <span>입금자명은 회원가입 시 사용한 <strong>이메일 주소</strong>로 입금해주세요.</span>
+                    </li>
+                    <li class="flex items-start">
+                        <i class="fas fa-check text-green-600 mr-2 mt-1"></i>
+                        <span>입금 확인 후 <strong>1~2시간 이내</strong>에 구독이 활성화됩니다.</span>
+                    </li>
+                    <li class="flex items-start">
+                        <i class="fas fa-check text-green-600 mr-2 mt-1"></i>
+                        <span>영업시간 외 입금 시 다음 영업일에 처리됩니다.</span>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="flex gap-4">
+                <button onclick="closeModal()" 
+                    class="flex-1 bg-gray-200 text-gray-700 py-4 px-6 rounded-xl font-bold text-lg hover:bg-gray-300 transition">
+                    취소
+                </button>
+                <button onclick="confirmBankTransfer()" 
+                    class="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 px-6 rounded-xl font-bold text-lg hover:from-blue-700 hover:to-purple-700 transition shadow-lg">
+                    <i class="fas fa-check mr-2"></i>
+                    입금 완료
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = window.location.origin;
+        let selectedPlanType = null;
+        let selectedPlanAmount = 0;
+        let currentUser = null;
+
+        // 페이지 로드 시 인증 확인
+        window.addEventListener('DOMContentLoaded', async () => {
+            await checkAuth();
+        });
+
+        // 인증 확인
+        async function checkAuth() {
+            console.log('🔍 [Payment] checkAuth 시작');
+            console.log('🔍 [Payment] API_BASE:', API_BASE);
+            console.log('🔍 [Payment] window.location.origin:', window.location.origin);
+            console.log('🔍 [Payment] window.location.href:', window.location.href);
+            
+            const token = localStorage.getItem('jwt_token') || localStorage.getItem('auth_token') || localStorage.getItem('token');
+            console.log('🔍 [Payment] Token:', token ? token.substring(0, 30) + '...' : 'null');
+            
+            if (!token) {
+                console.log('❌ [Payment] 토큰 없음 → 로그인 필요 화면 표시');
+                showNeedLogin();
+                return;
+            }
+
+            try {
+                console.log('🔍 [Payment] API 호출 시작: /api/auth/me');
+                const response = await fetch(`${API_BASE}/api/auth/me`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                console.log('🔍 [Payment] API 응답 상태:', response.status);
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    console.error('❌ [Payment] API 오류:', errorData);
+                    throw new Error('인증 실패: ' + response.status);
+                }
+
+                const data = await response.json();
+                console.log('✅ [Payment] 사용자 정보:', data.user);
+                currentUser = data.user;
+                console.log('✅ [Payment] 플랜 선택 화면 표시');
+                showPlanSelection();
+            } catch (error) {
+                console.error('❌ [Payment] checkAuth 오류:', error);
+                localStorage.removeItem('auth_token');
+                showNeedLogin();
+            }
+        }
+
+        function showNeedLogin() {
+            document.getElementById('loadingState').classList.add('hidden');
+            document.getElementById('needLoginState').classList.remove('hidden');
+        }
+
+        function showPlanSelection() {
+            document.getElementById('loadingState').classList.add('hidden');
+            document.getElementById('planSelection').classList.remove('hidden');
+            
+            // URL 파라미터로 전달된 플랜 자동 선택
+            const urlParams = new URLSearchParams(window.location.search);
+            const plan = urlParams.get('plan');
+            
+            if (plan === 'monthly') {
+                console.log('🎯 URL 파라미터로 월간 플랜 자동 선택');
+                selectPlan('monthly', 33000);
+            } else if (plan === 'annual') {
+                console.log('🎯 URL 파라미터로 연간 플랜 자동 선택');
+                selectPlan('annual', 297000);
+            }
+        }
+
+        // 플랜 선택
+        function selectPlan(type, amount) {
+            selectedPlanType = type;
+            selectedPlanAmount = amount;
+
+            const planNames = {
+                'test': '테스트 플랜 (1,000원)',
+                'monthly': '월간 구독 (33,000원/월)',
+                'yearly': '연간 구독 (297,000원/년)'
+            };
+
+            document.getElementById('selectedPlanName').textContent = planNames[type];
+            document.getElementById('selectedPlanPrice').textContent = amount.toLocaleString() + '원';
+            document.getElementById('selectedPlanInfo').classList.remove('hidden');
+
+            // 스크롤
+            document.getElementById('selectedPlanInfo').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        // 결제 방법 선택
+        function selectPaymentMethod(method) {
+            if (!selectedPlanType) {
+                alert('먼저 구독 플랜을 선택해주세요.');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                return;
+            }
+
+            if (method === 'bank') {
+                showBankTransferModal();
+            } else if (method === 'card') {
+                processCardPayment();
+            }
+        }
+
+        // 무통장 입금 모달 표시
+        function showBankTransferModal() {
+            document.getElementById('modalPaymentAmount').textContent = selectedPlanAmount.toLocaleString() + '원';
+            document.getElementById('bankTransferModal').classList.remove('hidden');
+        }
+
+        // 모달 닫기
+        function closeModal() {
+            document.getElementById('bankTransferModal').classList.add('hidden');
+        }
+
+        // 무통장 입금 확인
+        async function confirmBankTransfer() {
+            try {
+                const token = localStorage.getItem('jwt_token') || localStorage.getItem('auth_token') || localStorage.getItem('token');
+                
+                // 현재 날짜 (입금일자)
+                const now = new Date();
+                const depositDate = now.toISOString().split('T')[0]; // YYYY-MM-DD
+                
+                const response = await fetch(`${API_BASE}/api/subscription/payment/bank-transfer`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        plan_type: selectedPlanType,
+                        amount: selectedPlanAmount,
+                        depositor_name: currentUser.email, // 입금자명으로 이메일 사용
+                        bank_name: '국민은행',
+                        deposit_date: depositDate
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || '요청 처리 실패');
+                }
+
+                alert('✅ 입금 신청이 완료되었습니다!\n\n입금 확인 후 1~2시간 이내에 구독이 활성화됩니다.\n입금자명은 회원 이메일로 입금해주세요.');
+                closeModal();
+                window.location.href = '/';
+
+            } catch (error) {
+                console.error('Bank transfer error:', error);
+                alert('❌ 오류: ' + error.message);
+            }
+        }
+
+        // 간편결제 처리
+        async function processCardPayment() {
+            try {
+                const token = localStorage.getItem('jwt_token') || localStorage.getItem('auth_token') || localStorage.getItem('token');
+                
+                // 버튼 비활성화
+                const buttons = document.querySelectorAll('.payment-method-btn');
+                buttons.forEach(btn => btn.disabled = true);
+                
+                // PAYAPP 결제 요청
+                const response = await fetch(`${API_BASE}/api/payment/payapp/request`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        plan_type: selectedPlanType,
+                        amount: selectedPlanAmount
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || '결제 요청 실패');
+                }
+
+                // PAYAPP 결제창 열기
+                const payappData = data.data;
+                openPayappWindow(payappData);
+
+            } catch (error) {
+                console.error('Card payment error:', error);
+                
+                // 상세한 에러 메시지 표시
+                let errorMsg = error.message || '결제 요청 중 오류가 발생했습니다.';
+                
+                // PAYAPP 에러인 경우 추가 안내
+                if (errorMsg.includes('파라미터') || errorMsg.includes('필수')) {
+                    errorMsg += '\n\n⚠️ PAYAPP 결제 시스템 설정 문제일 수 있습니다.\n관리자에게 문의해주세요.\n\n또는 무통장 입금을 이용해주세요.';
+                }
+                
+                alert('❌ 결제 오류\n\n' + errorMsg);
+                
+                // 버튼 다시 활성화
+                const buttons = document.querySelectorAll('.payment-method-btn');
+                buttons.forEach(btn => btn.disabled = false);
+            }
+        }
+
+        // PAYAPP 결제창 열기
+        function openPayappWindow(payappData) {
+            // payurl로 바로 팝업 열기
+            if (payappData.payurl) {
+                const width = 500;
+                const height = 700;
+                const left = (screen.width - width) / 2;
+                const top = (screen.height - height) / 2;
+                
+                const payappWindow = window.open(payappData.payurl, 'payapp_window', 
+                    `width=${width},height=${height},left=${left},top=${top},scrollbars=yes,resizable=yes`);
+                
+                if (!payappWindow) {
+                    alert('팝업이 차단되었습니다.\n브라우저 설정에서 팝업을 허용해주세요.');
+                    return;
+                }
+
+                // 결제 완료 확인 (폴링)
+                checkPaymentStatus(payappData.paymentId);
+            } else {
+                alert('결제 URL을 받지 못했습니다. 다시 시도해주세요.');
+            }
+        }
+
+        // 결제 상태 확인 (폴링)
+        function checkPaymentStatus(paymentId) {
+            const checkInterval = setInterval(async () => {
+                try {
+                    const token = localStorage.getItem('jwt_token') || localStorage.getItem('auth_token') || localStorage.getItem('token');
+                    const response = await fetch(`${API_BASE}/api/payment/status/${paymentId}`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        
+                        if (data.status === 'confirmed') {
+                            clearInterval(checkInterval);
+                            showPaymentSuccess();
+                        } else if (data.status === 'failed') {
+                            clearInterval(checkInterval);
+                            alert('❌ 결제가 실패했습니다.');
+                            window.location.reload();
+                        }
+                    }
+                } catch (error) {
+                    console.error('Payment status check error:', error);
+                }
+            }, 3000); // 3초마다 확인
+
+            // 5분 후 자동 중지
+            setTimeout(() => {
+                clearInterval(checkInterval);
+            }, 300000);
+        }
+
+        // 결제 완료 화면 표시
+        function showPaymentSuccess() {
+            // 페이지 전체를 리다이렉트하는 방식으로 변경 (JavaScript 오류 방지)
+            window.location.href = '/?payment=success';
+        }
+    </script>
+</body>
+</html>

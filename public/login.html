@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>로그인 - 숏츠 생성기</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-purple-50 min-h-screen flex items-center justify-center p-4">
+    <div class="max-w-md w-full">
+        <!-- 로고 -->
+        <div class="text-center mb-8">
+            <div class="inline-block bg-white p-4 rounded-full shadow-lg mb-4">
+                <i class="fas fa-video text-5xl text-blue-600"></i>
+            </div>
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">숏츠 생성기</h1>
+            <p class="text-gray-600">AI로 자동 생성하는 유튜브 쇼츠</p>
+        </div>
+
+        <!-- 로그인 폼 -->
+        <div class="bg-white rounded-2xl shadow-2xl p-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">
+                <i class="fas fa-sign-in-alt mr-2 text-blue-600"></i>
+                로그인
+            </h2>
+
+            <form id="loginForm" class="space-y-4">
+                <!-- 이메일 -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-envelope mr-1"></i>
+                        이메일
+                    </label>
+                    <input type="email" id="email" name="email" required
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="example@email.com">
+                </div>
+
+                <!-- 비밀번호 -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-lock mr-1"></i>
+                        비밀번호
+                    </label>
+                    <div class="relative">
+                        <input type="password" id="password" name="password" required
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="비밀번호를 입력해주세요">
+                        <button type="button" onclick="togglePassword()"
+                            class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-eye" id="password-icon"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 에러 메시지 -->
+                <div id="errorMessage" class="hidden bg-red-50 border border-red-300 text-red-700 px-4 py-3 rounded-lg">
+                    <i class="fas fa-exclamation-circle mr-2"></i>
+                    <span id="errorText"></span>
+                </div>
+
+                <!-- 로그인 버튼 -->
+                <button type="submit" id="loginButton"
+                    class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-6 rounded-lg font-bold text-lg hover:from-blue-700 hover:to-purple-700 transition shadow-lg">
+                    <i class="fas fa-sign-in-alt mr-2"></i>
+                    로그인
+                </button>
+            </form>
+
+            <!-- 구분선 -->
+            <div class="relative my-6">
+                <div class="absolute inset-0 flex items-center">
+                    <div class="w-full border-t border-gray-300"></div>
+                </div>
+                <div class="relative flex justify-center text-sm">
+                    <span class="px-4 bg-white text-gray-500">또는</span>
+                </div>
+            </div>
+
+            <!-- 회원가입 링크 -->
+            <div class="text-center">
+                <p class="text-gray-600 mb-4">
+                    아직 계정이 없으신가요?
+                </p>
+                <a href="/signup.html" 
+                    class="block w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-3 px-6 rounded-lg font-bold text-lg hover:from-green-700 hover:to-emerald-700 transition shadow-lg">
+                    <i class="fas fa-user-plus mr-2"></i>
+                    무료로 시작하기
+                </a>
+                <p class="text-sm text-green-600 font-semibold mt-2">
+                    <i class="fas fa-gift mr-1"></i>
+                    3일 무료 체험!
+                </p>
+            </div>
+        </div>
+
+        <!-- 홈으로 -->
+        <div class="mt-6 text-center">
+            <a href="/" class="text-gray-600 hover:text-gray-800">
+                <i class="fas fa-arrow-left mr-2"></i>
+                홈으로 돌아가기
+            </a>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = window.location.origin;
+
+        // 비밀번호 표시/숨김
+        function togglePassword() {
+            const field = document.getElementById('password');
+            const icon = document.getElementById('password-icon');
+            
+            if (field.type === 'password') {
+                field.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                field.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+
+        // 로그인 처리
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            
+            if (!email || !password) {
+                showError('이메일과 비밀번호를 입력해주세요.');
+                return;
+            }
+            
+            // 버튼 비활성화
+            const button = document.getElementById('loginButton');
+            button.disabled = true;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>로그인 중...';
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || '로그인에 실패했습니다.');
+                }
+                
+                // JWT 토큰 저장 (localStorage에 jwt_token으로 저장)
+                localStorage.setItem('jwt_token', data.token);
+                console.log('✅ JWT token saved successfully');
+                
+                // 사용자 정보도 저장 (선택적)
+                if (data.user) {
+                    localStorage.setItem('user_info', JSON.stringify(data.user));
+                    console.log('✅ User info saved:', data.user.email);
+                }
+                
+                // 성공 메시지 표시 후 홈으로 이동
+                alert('✅ 로그인 성공!');
+                window.location.href = '/';
+                
+            } catch (error) {
+                showError(error.message);
+                button.disabled = false;
+                button.innerHTML = '<i class="fas fa-sign-in-alt mr-2"></i>로그인';
+            }
+        });
+
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            const errorText = document.getElementById('errorText');
+            errorText.textContent = message;
+            errorDiv.classList.remove('hidden');
+            
+            // 5초 후 자동 숨김
+            setTimeout(() => {
+                errorDiv.classList.add('hidden');
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

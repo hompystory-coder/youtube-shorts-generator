@@ -1,0 +1,988 @@
+
+    <!DOCTYPE html>
+    <html lang="ko">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>유튜브 쇼츠 자동 생성기</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+        
+        <!-- Google Fonts - Korean subset only (검증된 한글 폰트) -->
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@700&family=Black+Han+Sans&family=Jua&family=Gamja+Flower&family=Do+Hyeon&display=swap&subset=korean" rel="stylesheet">
+        
+        <style>
+            .progress-step { @apply relative flex-1 text-center; }
+            .progress-step.active .step-circle { @apply bg-blue-600 text-white border-blue-600; }
+            .progress-step.completed .step-circle { @apply bg-green-600 text-white border-green-600; }
+            .step-circle { @apply w-10 h-10 rounded-full border-2 border-gray-300 flex items-center justify-center mx-auto mb-2 bg-white transition-all; }
+            .loading { animation: spin 1s linear infinite; }
+            @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        </style>
+    </head>
+    <body class="bg-gradient-to-br from-blue-50 to-purple-50 min-h-screen">
+        <!-- Hidden input fields for API keys (loaded from mypage settings) -->
+        <input type="hidden" id="geminiApiKey" value="">
+        <input type="hidden" id="minimaxApiKey" value="">
+        <input type="hidden" id="minimaxGroupId" value="">
+        <input type="hidden" id="shotstackApiKey" value="">
+        
+        <div class="container mx-auto px-4 py-8 max-w-6xl">
+            <!-- Header -->
+            <div class="mb-8">
+                <div class="flex justify-between items-center mb-4 flex-wrap gap-4">
+                    <div>
+                        <h1 class="text-4xl font-bold text-gray-800 mb-2">
+                            <i class="fas fa-video mr-3 text-red-600"></i>
+                            유튜브 쇼츠 자동 생성기
+                        </h1>
+                        <p class="text-gray-600">블로그 글을 입력하면 자동으로 유튜브 쇼츠 영상이 생성됩니다</p>
+                    </div>
+                    
+                    <div class="flex gap-2 sm:gap-3 items-center flex-wrap">
+                        <!-- 플랜보기 버튼 (항상 표시 - 로그인 여부 무관) -->
+                        <button 
+                            id="pricingButton"
+                            onclick="showPricingModal()"
+                            class="px-3 sm:px-4 py-2 sm:py-2.5 bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-lg hover:from-purple-600 hover:to-pink-700 transition flex items-center gap-2 shadow-lg whitespace-nowrap text-sm sm:text-base cursor-pointer">
+                            <i class="fas fa-crown"></i>
+                            <span class="font-medium">플랜보기</span>
+                        </button>
+                        
+                        <!-- Auth Buttons -->
+                        <div id="authButtons" class="flex gap-2 sm:gap-3 items-center flex-wrap">
+                        <!-- Loading state -->
+                        <div id="authLoading" class="flex items-center gap-2">
+                            <i class="fas fa-spinner fa-spin text-gray-400"></i>
+                            <span class="text-sm text-gray-500">확인 중...</span>
+                        </div>
+                        
+                        <!-- Not logged in -->
+                        <div id="authNotLoggedIn" class="hidden flex items-center gap-2 sm:gap-3">
+                            <a href="/login.html" 
+                                class="px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center gap-2 shadow-md text-sm whitespace-nowrap">
+                                <i class="fas fa-sign-in-alt"></i>
+                                <span class="font-medium">로그인</span>
+                            </a>
+                            <a href="/signup.html" 
+                                class="px-3 sm:px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 transition flex items-center gap-2 shadow-md text-sm whitespace-nowrap">
+                                <i class="fas fa-user-plus"></i>
+                                <span class="font-medium">회원가입</span>
+                            </a>
+                        </div>
+                        
+                        <!-- Logged in -->
+                        <div id="authLoggedIn" class="hidden flex items-center gap-2 sm:gap-3 flex-wrap">
+                            <!-- Subscription Status Badge -->
+                            <div id="subscriptionBadge" class="hidden px-3 py-2 rounded-lg shadow-md cursor-pointer hover:shadow-lg transition" onclick="showPricingModal()">
+                                <div class="flex items-center gap-2">
+                                    <i class="fas fa-crown text-sm"></i>
+                                    <div>
+                                        <p class="text-xs font-semibold" id="subscriptionText">로딩 중...</p>
+                                        <p class="text-xs" id="subscriptionDays"></p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center gap-2 bg-white px-3 py-2 rounded-lg shadow-sm border border-gray-200">
+                                <img id="userPicture" src="" alt="Profile" class="w-7 h-7 sm:w-8 sm:h-8 rounded-full hidden">
+                                <div class="text-right hidden sm:block">
+                                    <p id="userName" class="text-sm font-semibold text-gray-800"></p>
+                                    <p id="userEmail" class="text-xs text-gray-500"></p>
+                                </div>
+                                <span id="userRole" class="px-2 py-1 text-xs font-semibold rounded-full"></span>
+                            </div>
+                            <!-- Admin Button (only for hompystory@gmail.com) -->
+                            <a href="/admin" 
+                                id="adminButton"
+                                class="hidden px-3 sm:px-4 py-2 bg-gradient-to-r from-red-600 to-orange-600 text-white rounded-lg hover:from-red-700 hover:to-orange-700 transition flex items-center gap-2 shadow-md text-sm whitespace-nowrap">
+                                <i class="fas fa-shield-alt"></i>
+                                <span class="font-medium hidden sm:inline">관리자</span>
+                            </a>
+                            <a href="/mypage" 
+                                class="px-3 sm:px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition flex items-center gap-2 shadow-md text-sm whitespace-nowrap">
+                                <i class="fas fa-user-circle"></i>
+                                <span class="font-medium hidden sm:inline">마이페이지</span>
+                            </a>
+                            <button onclick="handleLogout()" 
+                                class="px-3 sm:px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition flex items-center gap-2 shadow-md text-sm whitespace-nowrap">
+                                <i class="fas fa-sign-out-alt"></i>
+                                <span class="font-medium hidden sm:inline">로그아웃</span>
+                            </button>
+                        </div>
+                        </div> <!-- authButtons 끝 -->
+                    </div> <!-- flex container 끝 -->
+                </div> <!-- header 끝 -->
+            </div>
+
+            <!-- 구독 안내 배너 -->
+            <div id="subscriptionBanner" class="hidden mb-6 bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 rounded-lg shadow-xl p-6 text-white">
+                <div class="flex items-center justify-between">
+                    <div class="flex-1">
+                        <h3 class="text-2xl font-bold mb-2">
+                            <i class="fas fa-star mr-2"></i>
+                            프리미엄 구독으로 더 많은 기능을!
+                        </h3>
+                        <p class="text-white/90">무료 체험 3일 + 월 33,000원 / 연 297,000원 (25% 할인)</p>
+                    </div>
+                    <a href="/payment.html" class="ml-4 px-8 py-4 bg-white text-orange-600 font-bold rounded-lg hover:bg-gray-100 transition shadow-lg text-lg">
+                        <i class="fas fa-shopping-cart mr-2"></i>
+                        구독하기
+                    </a>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Left Panel - Settings -->
+                <div class="lg:col-span-1">
+                    <div class="bg-white rounded-lg shadow-lg p-6">
+                        <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                            <i class="fas fa-palette mr-2 text-blue-600"></i>
+                            기본 설정
+                        </h2>
+                        
+                        <div class="space-y-4">
+
+                            <!-- 배경 설정 -->
+                            <div class="mb-4 p-4 bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-200 rounded-lg">
+                                <h3 class="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                                    <i class="fas fa-image text-blue-600"></i>
+                                    배경 이미지 / 음악
+                                </h3>
+                                
+                                <div class="space-y-3">
+                                    <!-- 배경 이미지 선택 -->
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                                            <i class="fas fa-image mr-1"></i> 배경 이미지
+                                        </label>
+                                        <select id="bgImageSelect" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                            <option value="">선택 안함 (기본 이미지 사용)</option>
+                                        </select>
+                                        <p class="text-xs text-gray-500 mt-1">
+                                            <a href="/mypage" class="text-blue-600 hover:underline">마이페이지</a>에서 배경 이미지를 먼저 업로드해주세요
+                                        </p>
+                                    </div>
+
+                                    <!-- 배경 음악 선택 -->
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                                            <i class="fas fa-music mr-1"></i> 배경 음악
+                                        </label>
+                                        <select id="bgMusicSelect" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                            <option value="">선택 안함 (음악 없음)</option>
+                                        </select>
+                                        <p class="text-xs text-gray-500 mt-1">
+                                            <a href="/mypage" class="text-blue-600 hover:underline">마이페이지</a>에서 배경 음악을 먼저 업로드해주세요
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Minimax 음성 미리듣기 -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    <i class="fas fa-microphone mr-1"></i> Minimax 음성 선택
+                                </label>
+                                <select id="minimaxVoiceSelect" 
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm mb-2">
+                                    <option value="Friendly_Person" selected>친근한 목소리 (Friendly Person)</option>
+                                    <option value="Calm_Woman">차분한 여성 (Calm Woman)</option>
+                                    <option value="Wise_Woman">지혜로운 여성 (Wise Woman)</option>
+                                    <option value="Lively_Girl">활기찬 소녀 (Lively Girl)</option>
+                                    <option value="Sweet_Girl_2">달콤한 소녀 (Sweet Girl)</option>
+                                    <option value="Lovely_Girl">사랑스러운 소녀 (Lovely Girl)</option>
+                                    <option value="Casual_Guy">캐주얼한 남성 (Casual Guy)</option>
+                                    <option value="Deep_Voice_Man">저음 남성 (Deep Voice Man)</option>
+                                    <option value="Patient_Man">침착한 남성 (Patient Man)</option>
+                                    <option value="Determined_Man">단호한 남성 (Determined Man)</option>
+                                    <option value="Young_Knight">젊은 기사 (Young Knight)</option>
+                                    <option value="Elegant_Man">우아한 남성 (Elegant Man)</option>
+                                    <option value="Decent_Boy">점잖은 소년 (Decent Boy)</option>
+                                    <option value="Inspirational_girl">영감을 주는 소녀 (Inspirational Girl)</option>
+                                    <option value="Exuberant_Girl">생기 넘치는 소녀 (Exuberant Girl)</option>
+                                    <option value="Imposing_Manner">위엄 있는 (Imposing Manner)</option>
+                                    <option value="Abbess">수녀원장 (Abbess)</option>
+                                </select>
+                                
+                                <button type="button" id="previewVoiceBtn"
+                                    onclick="previewVoice()"
+                                    class="w-full px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-md hover:from-purple-600 hover:to-pink-600 transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                                    <i class="fas fa-play" id="previewVoiceIcon"></i>
+                                    <span id="previewVoiceText">음성 미리듣기</span>
+                                </button>
+                                
+                                <audio id="voicePreviewAudio" class="hidden"></audio>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                    <i class="fas fa-font mr-1"></i> 자막 폰트 (한글 지원) - 기본값
+                                </label>
+                                <select id="fontSelect" 
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <optgroup label="🇰🇷 검증된 한글 폰트 (로컬 호스팅)">
+                                        <option value="Noto Sans KR" selected>Noto Sans KR - 기본 고딕체</option>
+                                        <option value="Black Han Sans">Black Han Sans - 강한 임팩트</option>
+                                        <option value="Jua">Jua - 둥글고 귀여운</option>
+                                        <option value="Gamja Flower">Gamja Flower - 손글씨체</option>
+                                        <option value="Do Hyeon">Do Hyeon - 깔끔한 타이틀용</option>
+                                    </optgroup>
+                                </select>
+                                <p class="text-xs text-gray-500 mt-1">
+                                    💡 파트별로 다른 폰트를 사용하려면 스크립트 편집 단계에서 각 파트마다 폰트를 선택하세요.
+                                </p>
+                                
+                                <!-- 폰트 미리보기 -->
+                                <div id="fontPreview" class="mt-2 p-3 bg-gray-900 rounded-lg text-center">
+                                    <p id="fontPreviewText" style="color: white; font-size: 24px;">
+                                        안녕하세요! YouTube Shorts
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                                        <i class="fas fa-text-height mr-1"></i> 자막 크기
+                                    </label>
+                                    <select id="fontSizeSelect" 
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        <option value="40">작게 (40px)</option>
+                                        <option value="56" selected>중간 (56px)</option>
+                                        <option value="72">크게 (72px)</option>
+                                        <option value="96">매우 크게 (96px)</option>
+                                        <option value="120">초대형 (120px)</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                                        <i class="fas fa-palette mr-1"></i> 자막 색상
+                                    </label>
+                                    <select id="fontColorSelect" 
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        <option value="white" selected>흰색</option>
+                                        <option value="yellow">노란색</option>
+                                        <option value="#00ff00">녹색</option>
+                                        <option value="#ff69b4">분홍색</option>
+                                        <option value="#00bfff">하늘색</option>
+                                        <option value="red">빨간색</option>
+                                        <option value="orange">주황색</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                                        <i class="fas fa-adjust mr-1"></i> 그림자 효과
+                                    </label>
+                                    <select id="textShadowSelect" 
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        <option value="none">없음</option>
+                                        <option value="light" selected>가벼운 그림자</option>
+                                        <option value="medium">중간 그림자</option>
+                                        <option value="heavy">강한 그림자</option>
+                                        <option value="glow">발광 효과</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                                        <i class="fas fa-square mr-1"></i> 배경 스타일
+                                    </label>
+                                    <select id="captionBgSelect" 
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        <option value="none" selected>없음</option>
+                                        <option value="semi">반투명 검정</option>
+                                        <option value="solid">불투명 검정</option>
+                                        <option value="blur">블러 효과</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                    <i class="fas fa-bold mr-1"></i> 글자 굵기
+                                </label>
+                                <select id="fontWeightSelect" 
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="normal">보통</option>
+                                    <option value="bold" selected>굵게</option>
+                                    <option value="bolder">매우 굵게</option>
+                                    <option value="900">초굵게</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                    <i class="fas fa-align-center mr-1"></i> 자막 위치
+                                </label>
+                                <select id="captionPositionSelect" 
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="top">상단</option>
+                                    <option value="center" selected>중앙</option>
+                                    <option value="bottom">하단</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                    <i class="fas fa-magic mr-1"></i> 자막 애니메이션
+                                </label>
+                                <select id="captionAnimationSelect" 
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="fadeIn" selected>페이드 인</option>
+                                    <option value="slideUp">슬라이드 업</option>
+                                    <option value="slideDown">슬라이드 다운</option>
+                                    <option value="zoomIn">확대</option>
+                                    <option value="bounce">바운스</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                    <i class="fas fa-exchange-alt mr-1"></i> 이미지 전환 효과
+                                </label>
+                                <select id="imageTransitionSelect" 
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="zoomIn" selected>줌인 (Zoom In)</option>
+                                    <option value="zoomOut">줌아웃 (Zoom Out)</option>
+                                    <option value="slideLeft">왼쪽 슬라이드</option>
+                                    <option value="slideRight">오른쪽 슬라이드</option>
+                                    <option value="slideUp">위로 슬라이드</option>
+                                    <option value="slideDown">아래로 슬라이드</option>
+                                    <option value="none">효과 없음 (None)</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                    <i class="fas fa-video mr-1"></i> 영상 스타일
+                                </label>
+                                <select id="videoStyleSelect" 
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="dynamic" selected>다이나믹 (빠른 전개)</option>
+                                    <option value="calm">차분한 (느린 전개)</option>
+                                    <option value="exciting">흥분된 (에너지 넘치는)</option>
+                                    <option value="informative">정보 전달 (명확한)</option>
+                                    <option value="story">스토리텔링 (감성적)</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                    <i class="fas fa-comment-dots mr-1"></i> 스크립트 생성 프롬프트
+                                </label>
+                                <textarea id="promptText" rows="18"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm font-mono"
+                                    placeholder="예: 블로그 글을 유튜브 쇼츠 스크립트로 변환하는 프롬프트를 입력하세요.">당신은 유튜브 쇼츠 내레이션 스크립트 작성 전문가입니다.
+TTS 음성 생성을 위한 깔끔한 내레이션 텍스트만 작성하세요.
+
+절대 금지 사항:
+- 이모티콘/이모지 사용 금지
+- 장면 설명 금지 (예: 장면, 1-3초 등)
+- 마크다운 형식 금지 (**, #, - 등)
+- 콜론 사용 금지
+- 제목/부제 형식 금지
+- 타임코드 금지
+
+작성 원칙:
+1. 원문 충실 (블로그 내용 기반, 상상 금지)
+2. 자연스러운 말투 (TTS용 구어체)
+3. 문장 길이: 각 15-50자
+4. 총 6-10개 문장
+5. 마침표로만 구분
+
+출력: 순수 텍스트만 작성
+예시: 크리스마스가 다가왔습니다. 올해는 특별한 트리로 분위기를 내보세요. 고급스러운 블랙 컬러가 돋보입니다.</textarea>
+                            </div>
+
+                            <hr class="my-4">
+
+                            <h3 class="font-semibold text-gray-800 mb-3">
+                                <i class="fas fa-save mr-2"></i>내 템플릿 관리
+                            </h3>
+
+                            <div class="space-y-3">
+                                <div class="flex gap-2">
+                                    <input type="text" id="templateNameInput" 
+                                        class="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm"
+                                        placeholder="템플릿 이름 입력 (선택사항)">
+                                    <button onclick="saveCurrentTemplate()" 
+                                        class="px-4 py-2 bg-green-600 text-white text-sm rounded-md hover:bg-green-700 transition whitespace-nowrap">
+                                        <i class="fas fa-save mr-1"></i>이름으로 저장
+                                    </button>
+                                </div>
+                                <button onclick="saveCurrentTemplateWithTimestamp()" 
+                                    class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition">
+                                    <i class="fas fa-clock mr-2"></i>설정 저장 (날짜/시간으로 자동 저장)
+                                </button>
+                                <div id="savedTemplatesList" class="space-y-1 mt-3">
+                                    <!-- 저장된 템플릿 목록이 여기 표시됩니다 -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Panel - Main Workflow -->
+                <div class="lg:col-span-2">
+                    <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+                        <!-- Progress Steps -->
+                        <div class="flex mb-8">
+                            <div class="progress-step active" id="step1">
+                                <div class="step-circle">
+                                    <i class="fas fa-link"></i>
+                                </div>
+                                <span class="text-xs">URL 입력</span>
+                            </div>
+                            <div class="progress-step" id="step2">
+                                <div class="step-circle">
+                                    <i class="fas fa-file-alt"></i>
+                                </div>
+                                <span class="text-xs">스크립트</span>
+                            </div>
+                            <div class="progress-step" id="step3">
+                                <div class="step-circle">
+                                    <i class="fas fa-microphone"></i>
+                                </div>
+                                <span class="text-xs">음성 생성</span>
+                            </div>
+                            <div class="progress-step" id="step4">
+                                <div class="step-circle">
+                                    <i class="fas fa-video"></i>
+                                </div>
+                                <span class="text-xs">영상 생성</span>
+                            </div>
+                        </div>
+
+                        <!-- Step 1: Blog/Article URL Input -->
+                        <div id="urlInputSection">
+                            <h2 class="text-2xl font-bold text-gray-800 mb-4">
+                                <i class="fas fa-link mr-2 text-blue-600"></i>
+                                콘텐츠 크롤링
+                            </h2>
+                            
+                            <!-- Tab Navigation -->
+                            <div class="flex border-b border-gray-300 mb-4">
+                                <button id="blogTab" onclick="switchCrawlTab('blog')" 
+                                    class="flex-1 py-3 px-4 text-center font-semibold transition border-b-2 border-blue-600 text-blue-600">
+                                    <i class="fas fa-blog mr-2"></i>블로그
+                                </button>
+                                <button id="articleTab" onclick="switchCrawlTab('article')" 
+                                    class="flex-1 py-3 px-4 text-center font-semibold transition border-b-2 border-transparent text-gray-600 hover:text-gray-800">
+                                    <i class="fas fa-newspaper mr-2"></i>기사
+                                </button>
+                            </div>
+                            
+                            <!-- Blog Crawl Section -->
+                            <div id="blogCrawlSection">
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                                        <i class="fas fa-blog mr-1 text-blue-500"></i>블로그 글 URL
+                                    </label>
+                                    <input type="url" id="blogUrl" 
+                                        class="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        placeholder="https://blog.example.com/your-post">
+                                    <p class="text-xs text-gray-500 mt-1">
+                                        <i class="fas fa-info-circle mr-1"></i>네이버 블로그, 티스토리, 워드프레스 등 지원
+                                    </p>
+                                </div>
+
+                                <button onclick="crawlBlog()" 
+                                    class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-6 rounded-md hover:from-blue-700 hover:to-purple-700 transition font-semibold">
+                                    <i class="fas fa-download mr-2"></i>블로그 크롤링 시작
+                                </button>
+                            </div>
+                            
+                            <!-- Article Crawl Section -->
+                            <div id="articleCrawlSection" class="hidden">
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                                        <i class="fas fa-newspaper mr-1 text-blue-500"></i>뉴스 기사 URL
+                                    </label>
+                                    <input type="url" id="articleUrl" 
+                                        class="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        placeholder="https://www.eanews.kr/news/893944">
+                                    <p class="text-xs text-gray-500 mt-1">
+                                        <i class="fas fa-info-circle mr-1"></i>대부분의 뉴스 사이트 지원
+                                    </p>
+                                </div>
+
+                                <button onclick="crawlArticle()" 
+                                    class="w-full bg-gradient-to-r from-orange-600 to-red-600 text-white py-3 px-6 rounded-md hover:from-orange-700 hover:to-red-700 transition font-semibold">
+                                    <i class="fas fa-download mr-2"></i>기사 크롤링 시작
+                                </button>
+                            </div>
+                            
+                            <!-- Crawled Images Container -->
+                            <div id="crawledImagesContainer" class="hidden mt-4">
+                                <!-- Dynamic content populated by displayCrawledImages() -->
+                            </div>
+                        </div>
+
+                        <!-- Step 2: Script Preview -->
+                        <div id="scriptSection" class="hidden">
+                            <h2 class="text-2xl font-bold text-gray-800 mb-4">
+                                <i class="fas fa-file-alt mr-2 text-green-600"></i>
+                                생성된 스크립트
+                            </h2>
+                            
+                            <div class="mb-4 p-4 bg-gray-50 rounded-lg">
+                                <h3 class="font-semibold text-gray-700 mb-2">제목</h3>
+                                <p id="blogTitle" class="text-gray-800 mb-4"></p>
+                                
+                                <h3 class="font-semibold text-gray-700 mb-2">스크립트</h3>
+                                <textarea id="scriptText" rows="8" 
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    onchange="updateScriptParts()"></textarea>
+                                
+                                <button id="analyzeScriptBtn" onclick="analyzeScriptParts()" 
+                                    class="mt-3 w-full px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-base font-bold rounded-lg hover:from-purple-700 hover:to-pink-700 transition shadow-lg hover:shadow-xl transform hover:scale-105">
+                                    <i class="fas fa-magic mr-2"></i>파트별 이미지 매핑
+                                </button>
+                                <p class="text-xs text-gray-500 mt-2">
+                                    <i class="fas fa-info-circle mr-1"></i>
+                                    스크립트를 파트로 분할하고 각 파트에 이미지를 할당합니다
+                                </p>
+                            </div>
+
+                            <!-- Script Parts & Image Mapping -->
+                            <div id="scriptPartsContainer" class="hidden mb-4">
+                                <!-- Dynamic content populated by displayScriptParts() -->
+                            </div>
+
+                            <div class="flex gap-3">
+                                <button onclick="generateAudio()" 
+                                    class="flex-1 bg-green-600 text-white py-3 px-6 rounded-md hover:bg-green-700 transition font-semibold">
+                                    <i class="fas fa-microphone mr-2"></i>음성 생성
+                                </button>
+                                <button onclick="resetWorkflow()" 
+                                    class="bg-gray-500 text-white py-3 px-6 rounded-md hover:bg-gray-600 transition">
+                                    <i class="fas fa-redo mr-2"></i>다시 시작
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Step 3: Audio Generated -->
+                        <div id="audioSection" class="hidden">
+                            <h2 class="text-2xl font-bold text-gray-800 mb-4">
+                                <i class="fas fa-microphone mr-2 text-purple-600"></i>
+                                음성 생성 완료
+                            </h2>
+                            
+                            <div class="mb-4 p-4 bg-purple-50 rounded-lg">
+                                <audio id="audioPlayer" controls class="w-full mb-4"></audio>
+                                <p class="text-sm text-gray-600">음성이 생성되었습니다. 이제 영상을 생성할 수 있습니다.</p>
+                            </div>
+
+                            <button onclick="generateVideo()" 
+                                class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 px-6 rounded-md hover:from-purple-700 hover:to-pink-700 transition font-semibold">
+                                <i class="fas fa-video mr-2"></i>영상 생성
+                            </button>
+                        </div>
+
+                        <!-- Step 4: Video Generated -->
+                        <div id="videoSection" class="hidden">
+                            <h2 class="text-2xl font-bold text-gray-800 mb-4">
+                                <i class="fas fa-check-circle mr-2 text-green-600"></i>
+                                영상 생성 완료!
+                            </h2>
+                            
+                            <div class="mb-4 p-4 bg-green-50 rounded-lg">
+                                <video id="videoPlayer" controls class="w-full rounded-lg mb-4"></video>
+                                
+                                <!-- Audio Player Section (Hidden by default) -->
+                                <div id="audioSection" class="mb-4" style="display: none;">
+                                    <h4 class="text-sm font-semibold text-gray-700 mb-2">
+                                        <i class="fas fa-volume-up mr-2"></i>생성된 음성
+                                    </h4>
+                                    <audio id="audioPlayer" controls class="w-full"></audio>
+                                </div>
+                                
+                                <div class="flex gap-3">
+                                    <a id="downloadLink" download 
+                                        class="flex-1 bg-blue-600 text-white text-center py-3 px-6 rounded-md hover:bg-blue-700 transition font-semibold">
+                                        <i class="fas fa-download mr-2"></i>다운로드
+                                    </a>
+                                    <button onclick="resetWorkflow()" 
+                                        class="bg-gray-500 text-white py-3 px-6 rounded-md hover:bg-gray-600 transition">
+                                        <i class="fas fa-plus mr-2"></i>새로 만들기
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Loading Overlay -->
+                        <div id="loadingOverlay" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                            <div class="bg-white rounded-lg p-8 max-w-md">
+                                <div class="text-center">
+                                    <i class="fas fa-spinner loading text-4xl text-blue-600 mb-4"></i>
+                                    <h3 class="text-xl font-bold text-gray-800 mb-2" id="loadingTitle">처리중...</h3>
+                                    <p class="text-gray-600" id="loadingMessage">잠시만 기다려주세요.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Projects -->
+                    <div class="bg-white rounded-lg shadow-lg p-6">
+                        <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                            <i class="fas fa-history mr-2 text-gray-600"></i>
+                            최근 프로젝트
+                        </h2>
+                        <div id="projectsList" class="space-y-2">
+                            <p class="text-gray-500 text-sm">아직 생성된 프로젝트가 없습니다.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Image Preview Modal -->
+        <div id="imageModal" class="hidden fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center p-4" onclick="closeImageModal()">
+            <div class="relative max-w-7xl max-h-full" onclick="event.stopPropagation()">
+                <button onclick="closeImageModal()" 
+                    class="absolute -top-12 right-0 text-white text-2xl hover:text-gray-300 transition">
+                    <i class="fas fa-times-circle"></i>
+                </button>
+                <img id="modalImage" src="" alt="Preview" class="max-w-full max-h-screen object-contain rounded-lg shadow-2xl">
+                <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-75 text-white px-4 py-2 rounded-lg text-sm">
+                    클릭하여 닫기
+                </div>
+            </div>
+        </div>
+
+        <!-- Caption Preview Modal -->
+        <div id="captionPreviewModal" class="hidden fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center p-4">
+            <div class="relative w-full max-w-md bg-black rounded-lg overflow-hidden shadow-2xl" style="aspect-ratio: 9/16;">
+                <button onclick="closeCaptionPreview()" 
+                    class="absolute top-4 right-4 z-10 text-white text-2xl hover:text-gray-300 transition">
+                    <i class="fas fa-times-circle"></i>
+                </button>
+                <div id="captionPreviewContent" class="relative w-full h-full flex items-center justify-center">
+                    <!-- 미리보기 내용이 여기 표시됩니다 -->
+                </div>
+            </div>
+        </div>
+
+        <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
+        
+        <!-- Load API keys from backend before app.js loads -->
+        <script>
+        (async function loadApiKeys() {
+            try {
+                const authToken = localStorage.getItem('jwt_token');
+                if (!authToken) {
+                    console.log('⚠️ No auth token, API keys not loaded');
+                    return;
+                }
+                
+                // Get current user info to extract userId
+                const userResponse = await fetch('/api/auth/me', {
+                    headers: { 'Authorization': 'Bearer ' + authToken }
+                });
+                
+                if (!userResponse.ok) {
+                    console.log('⚠️ Failed to get user info');
+                    return;
+                }
+                
+                const userData = await userResponse.json();
+                
+                // Fix: userData.data.id (not userData.user.id)
+                if (!userData.success || !userData.data) {
+                    console.log('⚠️ Invalid user data response');
+                    return;
+                }
+                
+                const userId = userData.data.id;
+                
+                // Fetch user settings
+                const settingsResponse = await fetch('/api/settings/' + userId);
+                if (!settingsResponse.ok) {
+                    console.log('⚠️ Failed to load settings');
+                    return;
+                }
+                
+                const settingsData = await settingsResponse.json();
+                
+                if (settingsData.success && settingsData.data) {
+                    const settings = settingsData.data;
+                    
+                    // Fill hidden input fields
+                    document.getElementById('geminiApiKey').value = settings.gemini_api_key || '';
+                    document.getElementById('minimaxApiKey').value = settings.minimax_api_key || '';
+                    document.getElementById('minimaxGroupId').value = settings.minimax_group_id || '';
+                    document.getElementById('shotstackApiKey').value = settings.shotstack_api_key || '';
+                    
+                    console.log('✅ API keys loaded successfully from settings');
+                    console.log('   - Gemini:', settings.gemini_api_key ? '✓' : '✗');
+                    console.log('   - Minimax:', settings.minimax_api_key ? '✓' : '✗');
+                    console.log('   - Minimax Group ID:', settings.minimax_group_id ? '✓' : '✗');
+                    console.log('   - Shotstack:', settings.shotstack_api_key ? '✓' : '✗');
+                } else {
+                    console.log('⚠️ No settings found for user');
+                }
+            } catch (error) {
+                console.error('❌ Failed to load API keys:', error);
+            }
+        })();
+
+        // 구독 상태 확인 및 표시
+        async function checkSubscriptionStatus() {
+            try {
+                const response = await fetch('/api/subscription/status', { credentials: 'include' });
+                if (!response.ok) {
+                    console.log('⚠️ Subscription status check failed');
+                    return;
+                }
+
+                const result = await response.json();
+                const badge = document.getElementById('subscriptionBadge');
+                const text = document.getElementById('subscriptionText');
+                const days = document.getElementById('subscriptionDays');
+                const banner = document.getElementById('subscriptionBanner');
+
+                if (!badge || !text || !days) return;
+
+                // API 응답 구조: { success: true, data: { status, daysLeft, ... } }
+                const statusData = result.data || result;
+                const statusType = statusData.status;
+
+                if (statusType === 'trial') {
+                    // 무료 체험 중: 배지 표시, 배너 숨김
+                    badge.classList.remove('hidden');
+                    if (banner) banner.classList.add('hidden');
+                    badge.className = 'px-4 py-2 rounded-lg shadow-md cursor-pointer hover:shadow-lg transition bg-gradient-to-r from-blue-500 to-purple-500 text-white';
+                    text.textContent = '무료 체험';
+                    days.textContent = statusData.daysLeft ? `${statusData.daysLeft}일 남음` : '';
+                } else if (statusType === 'active') {
+                    // 구독 중: 배지 표시, 배너 숨김
+                    badge.classList.remove('hidden');
+                    if (banner) banner.classList.add('hidden');
+                    badge.className = 'px-4 py-2 rounded-lg shadow-md cursor-pointer hover:shadow-lg transition bg-gradient-to-r from-green-500 to-emerald-500 text-white';
+                    text.textContent = '프리미엄';
+                    const endDate = statusData.subscription_end ? new Date(statusData.subscription_end) : null;
+                    if (endDate) {
+                        const daysRemaining = Math.ceil((endDate - new Date()) / (1000 * 60 * 60 * 24));
+                        days.textContent = `${daysRemaining}일 남음`;
+                    }
+                } else if (statusType === 'expired') {
+                    // 구독 만료: 배지 숨김, 배너 표시
+                    badge.classList.add('hidden');
+                    if (banner) banner.classList.remove('hidden');
+                }
+
+                console.log('✅ Subscription status loaded:', statusType);
+            } catch (error) {
+                console.error('❌ Failed to load subscription status:', error);
+            }
+        }
+
+        // 로그인 상태일 때 구독 상태 확인
+        const authLoggedIn = document.getElementById('authLoggedIn');
+        if (authLoggedIn && !authLoggedIn.classList.contains('hidden')) {
+            checkSubscriptionStatus();
+        }
+
+        // 인증 상태가 변경되면 구독 상태도 확인
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.target.id === 'authLoggedIn' && !mutation.target.classList.contains('hidden')) {
+                    checkSubscriptionStatus();
+                }
+            });
+        });
+
+        const authLoggedInElement = document.getElementById('authLoggedIn');
+        if (authLoggedInElement) {
+            observer.observe(authLoggedInElement, { attributes: true, attributeFilter: ['class'] });
+        }
+
+        // 플랜보기 모달 열기
+        function showPricingModal() {
+            document.getElementById('pricingModal').classList.remove('hidden');
+            document.getElementById('pricingModal').classList.add('flex');
+            document.body.style.overflow = 'hidden';
+        }
+
+        // 플랜보기 모달 닫기
+        function closePricingModal() {
+            document.getElementById('pricingModal').classList.add('hidden');
+            document.getElementById('pricingModal').classList.remove('flex');
+            document.body.style.overflow = 'auto';
+        }
+
+        // ESC 키로 모달 닫기
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closePricingModal();
+            }
+        });
+
+        // 모달 배경 클릭 시 닫기
+        document.getElementById('pricingModal')?.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closePricingModal();
+            }
+        });
+        </script>
+        
+        <!-- 플랜보기 모달 -->
+        <div id="pricingModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+            <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+                <div class="sticky top-0 bg-gradient-to-r from-purple-600 to-pink-600 text-white p-6 rounded-t-2xl">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h2 class="text-3xl font-bold mb-2">
+                                <i class="fas fa-crown mr-2"></i>
+                                구독 플랜
+                            </h2>
+                            <p class="text-purple-100">프리미엄 기능을 이용하고 무제한 영상을 생성하세요!</p>
+                        </div>
+                        <button onclick="closePricingModal()" class="text-white hover:text-gray-200 text-3xl font-bold">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="p-8">
+                    <!-- 무료 체험 안내 -->
+                    <div class="bg-blue-50 border-2 border-blue-300 rounded-xl p-6 mb-8">
+                        <div class="flex items-center gap-3 mb-3">
+                            <i class="fas fa-gift text-4xl text-blue-600"></i>
+                            <div>
+                                <h3 class="text-2xl font-bold text-blue-900">3일 무료 체험</h3>
+                                <p class="text-blue-700">회원가입 시 자동으로 시작됩니다!</p>
+                            </div>
+                        </div>
+                        <ul class="space-y-2 text-blue-800">
+                            <li><i class="fas fa-check-circle text-blue-600 mr-2"></i>모든 프리미엄 기능 사용 가능</li>
+                            <li><i class="fas fa-check-circle text-blue-600 mr-2"></i>무제한 영상 생성</li>
+                            <li><i class="fas fa-check-circle text-blue-600 mr-2"></i>체험 후 자유롭게 구독 선택</li>
+                        </ul>
+                    </div>
+
+                    <!-- 구독 플랜 -->
+                    <div class="grid md:grid-cols-2 gap-6 mb-8">
+                        <!-- 월간 플랜 -->
+                        <div class="border-2 border-gray-300 rounded-xl p-6 hover:border-orange-500 hover:shadow-xl transition">
+                            <div class="text-center mb-6">
+                                <h3 class="text-2xl font-bold text-gray-800 mb-2">월간 플랜</h3>
+                                <div class="flex items-baseline justify-center gap-2">
+                                    <span class="text-5xl font-bold text-orange-600">33,000</span>
+                                    <span class="text-2xl text-gray-600">원</span>
+                                </div>
+                                <p class="text-gray-500 mt-2">/ 월</p>
+                            </div>
+                            
+                            <ul class="space-y-3 mb-6">
+                                <li class="flex items-start gap-2">
+                                    <i class="fas fa-check text-green-600 mt-1"></i>
+                                    <span class="text-gray-700">무제한 영상 생성</span>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <i class="fas fa-check text-green-600 mt-1"></i>
+                                    <span class="text-gray-700">모든 프리미엄 기능</span>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <i class="fas fa-check text-green-600 mt-1"></i>
+                                    <span class="text-gray-700">고화질 다운로드</span>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <i class="fas fa-check text-green-600 mt-1"></i>
+                                    <span class="text-gray-700">우선 고객 지원</span>
+                                </li>
+                            </ul>
+                            
+                            <a href="/payment.html?plan=monthly" class="block w-full py-4 bg-gradient-to-r from-yellow-500 to-orange-600 text-white text-center rounded-lg hover:from-yellow-600 hover:to-orange-700 transition font-bold text-lg shadow-lg">
+                                <i class="fas fa-shopping-cart mr-2"></i>
+                                월간 구독하기
+                            </a>
+                        </div>
+
+                        <!-- 연간 플랜 (할인) -->
+                        <div class="border-4 border-green-500 rounded-xl p-6 hover:shadow-2xl transition relative overflow-hidden">
+                            <div class="absolute top-4 right-4 bg-green-500 text-white px-4 py-1 rounded-full text-sm font-bold">
+                                25% 할인
+                            </div>
+                            
+                            <div class="text-center mb-6">
+                                <h3 class="text-2xl font-bold text-gray-800 mb-2">연간 플랜</h3>
+                                <div class="flex items-baseline justify-center gap-2">
+                                    <span class="text-5xl font-bold text-green-600">297,000</span>
+                                    <span class="text-2xl text-gray-600">원</span>
+                                </div>
+                                <p class="text-gray-500 mt-2">/ 년</p>
+                                <p class="text-green-600 font-bold mt-2">
+                                    <span class="line-through text-gray-400 text-sm">396,000원</span>
+                                    <span class="ml-2">99,000원 절약!</span>
+                                </p>
+                            </div>
+                            
+                            <ul class="space-y-3 mb-6">
+                                <li class="flex items-start gap-2">
+                                    <i class="fas fa-check text-green-600 mt-1"></i>
+                                    <span class="text-gray-700">월간 플랜의 모든 기능</span>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <i class="fas fa-star text-green-600 mt-1"></i>
+                                    <span class="text-gray-700 font-bold">25% 할인 혜택</span>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <i class="fas fa-star text-green-600 mt-1"></i>
+                                    <span class="text-gray-700 font-bold">추가 기능 우선 제공</span>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <i class="fas fa-star text-green-600 mt-1"></i>
+                                    <span class="text-gray-700 font-bold">1:1 전담 지원</span>
+                                </li>
+                            </ul>
+                            
+                            <a href="/payment.html?plan=annual" class="block w-full py-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white text-center rounded-lg hover:from-green-600 hover:to-emerald-700 transition font-bold text-lg shadow-lg">
+                                <i class="fas fa-crown mr-2"></i>
+                                연간 구독하기 (25% 할인)
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- 결제 방법 안내 -->
+                    <div class="bg-gray-50 rounded-xl p-6">
+                        <h4 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                            <i class="fas fa-credit-card text-blue-600"></i>
+                            지원하는 결제 방법
+                        </h4>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                            <div class="text-center p-3 bg-white rounded-lg shadow">
+                                <i class="fas fa-comments text-3xl text-yellow-500 mb-2"></i>
+                                <p class="text-sm font-medium">카카오페이</p>
+                            </div>
+                            <div class="text-center p-3 bg-white rounded-lg shadow">
+                                <i class="fas fa-n text-3xl text-green-600 mb-2"></i>
+                                <p class="text-sm font-medium">네이버페이</p>
+                            </div>
+                            <div class="text-center p-3 bg-white rounded-lg shadow">
+                                <i class="fas fa-credit-card text-3xl text-blue-600 mb-2"></i>
+                                <p class="text-sm font-medium">신용카드</p>
+                            </div>
+                            <div class="text-center p-3 bg-white rounded-lg shadow">
+                                <i class="fas fa-university text-3xl text-gray-600 mb-2"></i>
+                                <p class="text-sm font-medium">무통장입금</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <script src="/static/audio-sync-helper.js?v=20251125001"></script>
+        <script src="/static/app.js?v=20251125001"></script>
+    </body>
+    </html>
+  
