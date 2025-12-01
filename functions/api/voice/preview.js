@@ -71,11 +71,30 @@ export async function onRequestPost(context) {
     
     console.log('📦 Minimax API 응답:', JSON.stringify(result));
     
+    // Minimax API 응답 구조 확인
+    // base_resp.status_code === 0 이면 성공
+    if (result.base_resp && result.base_resp.status_code !== 0) {
+      const errorMsg = result.base_resp.status_msg || 'Unknown error';
+      console.error('❌ Minimax API 오류:', errorMsg);
+      return new Response(JSON.stringify({
+        success: false,
+        error: `Minimax API 오류: ${errorMsg}`,
+        debug: result
+      }), {
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        }
+      });
+    }
+    
     // Minimax API 응답에서 오디오 URL 추출
     // 가능한 경로들: result.audio_file, result.data.audio_file, result.extra_info.audio_file
     const audioUrl = result.audio_file || 
                      result.data?.audio_file || 
-                     result.extra_info?.audio_file;
+                     result.extra_info?.audio_file ||
+                     result.data?.audio_url;
     
     if (!audioUrl) {
       console.error('❌ 오디오 URL을 찾을 수 없음:', JSON.stringify(result, null, 2));

@@ -607,8 +607,16 @@ async function previewVoice() {
         console.log('📦 API Response:', data);
         
         if (!data.success) {
-            console.error('❌ API Error Details:', data.debug);
-            throw new Error(data.error || '음성 생성 실패');
+            console.error('❌ API Error Details:', JSON.stringify(data.debug, null, 2));
+            
+            // 더 자세한 에러 정보 표시
+            let errorMsg = data.error || '음성 생성 실패';
+            if (data.debug && data.debug.base_resp) {
+                errorMsg += `\n상태 코드: ${data.debug.base_resp.status_code}`;
+                errorMsg += `\n메시지: ${data.debug.base_resp.status_msg}`;
+            }
+            
+            throw new Error(errorMsg);
         }
         
         console.log('✅ Voice preview generated:', data.data.audioUrl);
