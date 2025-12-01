@@ -804,7 +804,12 @@
         // 배경음악 리스트 표시
         function displayBgmList(bgms) {
             const listEl = document.getElementById('bgmList');
-            if (!bgms || bgms.length === 0) {
+            
+            // 삭제된 항목 필터링
+            const deletedBgms = JSON.parse(sessionStorage.getItem('deletedBgms') || '[]');
+            const filteredBgms = bgms.filter(bgm => !deletedBgms.includes(bgm.id));
+            
+            if (!filteredBgms || filteredBgms.length === 0) {
                 listEl.innerHTML = `
                     <div class="p-6 bg-white rounded-lg text-center text-gray-500">
                         <i class="fas fa-music text-4xl mb-3 text-purple-300"></i>
@@ -815,7 +820,7 @@
                 return;
             }
             
-            listEl.innerHTML = bgms.map(bgm => `
+            listEl.innerHTML = filteredBgms.map(bgm => `
                 <div class="flex items-center justify-between p-4 bg-white rounded-lg border border-purple-200 hover:shadow-md transition">
                     <div class="flex items-center gap-3 flex-1">
                         <i class="fas fa-music text-2xl text-purple-600"></i>
@@ -837,7 +842,12 @@
         // 배경 이미지 리스트 표시
         function displayBgImageList(images) {
             const listEl = document.getElementById('bgImageList');
-            if (!images || images.length === 0) {
+            
+            // 삭제된 항목 필터링
+            const deletedImages = JSON.parse(sessionStorage.getItem('deletedBgImages') || '[]');
+            const filteredImages = images.filter(img => !deletedImages.includes(img.id));
+            
+            if (!filteredImages || filteredImages.length === 0) {
                 listEl.innerHTML = `
                     <div class="col-span-2 p-6 bg-white rounded-lg text-center text-gray-500">
                         <i class="fas fa-image text-4xl mb-3 text-blue-300"></i>
@@ -848,7 +858,7 @@
                 return;
             }
             
-            listEl.innerHTML = images.map(img => `
+            listEl.innerHTML = filteredImages.map(img => `
                 <div class="relative group">
                     <img src="${img.data_url}" alt="${img.name}" 
                         class="w-full h-32 object-cover rounded-lg border-2 border-blue-200">
@@ -1002,6 +1012,12 @@
                 const data = await response.json();
                 if (data.success) {
                     console.log('✅ 배경음악 삭제 성공');
+                    
+                    // 삭제된 ID를 sessionStorage에 저장
+                    const deletedBgms = JSON.parse(sessionStorage.getItem('deletedBgms') || '[]');
+                    deletedBgms.push(id);
+                    sessionStorage.setItem('deletedBgms', JSON.stringify(deletedBgms));
+                    
                     await loadBackgroundSettings();
                     alert('✅ 배경음악이 삭제되었습니다.');
                 } else {
@@ -1027,6 +1043,12 @@
                 const data = await response.json();
                 if (data.success) {
                     console.log('✅ 배경 이미지 삭제 성공');
+                    
+                    // 삭제된 ID를 sessionStorage에 저장
+                    const deletedImages = JSON.parse(sessionStorage.getItem('deletedBgImages') || '[]');
+                    deletedImages.push(id);
+                    sessionStorage.setItem('deletedBgImages', JSON.stringify(deletedImages));
+                    
                     await loadBackgroundSettings();
                     alert('✅ 배경 이미지가 삭제되었습니다.');
                 } else {
