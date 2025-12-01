@@ -91,9 +91,11 @@ export async function onRequestPost(context) {
       id: `bgm_${Date.now()}`,
       name: fileName,
       url: `https://example.com/uploads/${fileName}`,
+      data_url: fileData || `https://example.com/uploads/${fileName}`, // For frontend display
       size: '2.5', // MB
       duration: duration || 180,
-      uploadedAt: new Date().toISOString()
+      uploadedAt: new Date().toISOString(),
+      created_at: new Date().toISOString() // For frontend display
     };
     
     return new Response(JSON.stringify({

@@ -90,8 +90,10 @@ export async function onRequestPost(context) {
       id: `img_${Date.now()}`,
       name: fileName,
       url: `https://images.unsplash.com/photo-${Date.now()}?w=400`,
+      data_url: fileData || `https://images.unsplash.com/photo-${Date.now()}?w=400`, // For frontend display
       size: '1.5', // MB
-      uploadedAt: new Date().toISOString()
+      uploadedAt: new Date().toISOString(),
+      created_at: new Date().toISOString() // For frontend display
     };
     
     return new Response(JSON.stringify({

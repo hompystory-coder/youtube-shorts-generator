@@ -15,17 +15,21 @@ export async function onRequestGet(context) {
         id: 'bgm_1',
         name: '경쾌한 팝송.mp3',
         url: 'https://example.com/music1.mp3',
+        data_url: 'https://example.com/music1.mp3',
         duration: 180,
         size: 2.5,
-        uploadedAt: new Date().toISOString()
+        uploadedAt: new Date().toISOString(),
+        created_at: new Date().toISOString()
       },
       {
         id: 'bgm_2',
         name: '차분한 재즈.mp3',
         url: 'https://example.com/music2.mp3',
+        data_url: 'https://example.com/music2.mp3',
         duration: 200,
         size: 3.2,
-        uploadedAt: new Date().toISOString()
+        uploadedAt: new Date().toISOString(),
+        created_at: new Date().toISOString()
       }
     ];
     

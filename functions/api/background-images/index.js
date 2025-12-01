@@ -15,22 +15,28 @@ export async function onRequestGet(context) {
         id: 'img_1',
         name: '배경1.jpg',
         url: 'https://images.unsplash.com/photo-1557683316-973673baf926?w=400',
+        data_url: 'https://images.unsplash.com/photo-1557683316-973673baf926?w=400',
         size: 1.2,
-        uploadedAt: new Date().toISOString()
+        uploadedAt: new Date().toISOString(),
+        created_at: new Date().toISOString()
       },
       {
         id: 'img_2',
         name: '배경2.jpg',
         url: 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=400',
+        data_url: 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=400',
         size: 1.5,
-        uploadedAt: new Date().toISOString()
+        uploadedAt: new Date().toISOString(),
+        created_at: new Date().toISOString()
       },
       {
         id: 'img_3',
         name: '배경3.jpg',
         url: 'https://images.unsplash.com/photo-1557682250-33bd709cbe85?w=400',
+        data_url: 'https://images.unsplash.com/photo-1557682250-33bd709cbe85?w=400',
         size: 1.8,
-        uploadedAt: new Date().toISOString()
+        uploadedAt: new Date().toISOString(),
+        created_at: new Date().toISOString()
       }
     ];
     
