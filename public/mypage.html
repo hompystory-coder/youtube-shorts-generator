@@ -688,10 +688,15 @@
             };
 
             try {
-                const response = await fetch(`${API_BASE}/api/settings`, {
+                const response = await fetch(`${API_BASE}/api/settings/${currentUser.id}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(formData)
+                    body: JSON.stringify({
+                        gemini_api_key: formData.geminiApiKey,
+                        minimax_api_key: formData.minimaxApiKey,
+                        minimax_group_id: formData.minimaxGroupId,
+                        shotstack_api_key: formData.shotstackApiKey
+                    })
                 });
 
                 const data = await response.json();
