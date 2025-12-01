@@ -642,7 +642,14 @@ async function previewVoice() {
         
     } catch (error) {
         console.error('❌ Voice preview error:', error);
-        alert('음성 미리듣기 실패: ' + error.message);
+        
+        // 에러 메시지 표시
+        let errorMessage = error.message;
+        if (errorMessage.includes('rate limit') || errorMessage.includes('사용량 제한')) {
+            errorMessage += '\n\n💡 팁: 30초 정도 기다린 후 다시 시도해주세요.';
+        }
+        
+        alert('음성 미리듣기 실패:\n\n' + errorMessage);
         
         // Reset button
         if (previewBtn) {

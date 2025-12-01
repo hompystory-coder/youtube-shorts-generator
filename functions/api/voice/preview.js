@@ -75,10 +75,24 @@ export async function onRequestPost(context) {
     // base_resp.status_code === 0 이면 성공
     if (result.base_resp && result.base_resp.status_code !== 0) {
       const errorMsg = result.base_resp.status_msg || 'Unknown error';
-      console.error('❌ Minimax API 오류:', errorMsg);
+      const statusCode = result.base_resp.status_code;
+      
+      console.error('❌ Minimax API 오류:', errorMsg, 'Status Code:', statusCode);
+      
+      // 사용자 친화적인 에러 메시지
+      let userMessage = errorMsg;
+      if (statusCode === 1002) {
+        userMessage = 'API 사용량 제한입니다. 잠시 후 다시 시도해주세요. (30초 대기 권장)';
+      } else if (statusCode === 1004) {
+        userMessage = 'API 인증에 실패했습니다. 마이페이지에서 API 키를 확인해주세요.';
+      } else if (statusCode === 2013) {
+        userMessage = '요청 파라미터가 올바르지 않습니다.';
+      }
+      
       return new Response(JSON.stringify({
         success: false,
-        error: `Minimax API 오류: ${errorMsg}`,
+        error: userMessage,
+        statusCode: statusCode,
         debug: result
       }), {
         status: 500,
