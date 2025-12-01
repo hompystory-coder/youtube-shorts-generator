@@ -707,7 +707,8 @@ async function loadUserBackgrounds() {
         
         if (imagesResponse.ok) {
             const imagesData = await imagesResponse.json();
-            userBackgroundImages = imagesData.images || [];
+            // API returns {success, data, total}
+            userBackgroundImages = imagesData.data || imagesData.images || [];
             console.log('✅ Loaded background images:', userBackgroundImages.length);
             populateBgImageSelect();
         }
@@ -721,7 +722,8 @@ async function loadUserBackgrounds() {
         
         if (musicResponse.ok) {
             const musicData = await musicResponse.json();
-            userBackgroundMusic = musicData.music || [];
+            // API returns {success, data, total}
+            userBackgroundMusic = musicData.data || musicData.music || [];
             console.log('✅ Loaded background music:', userBackgroundMusic.length);
             populateBgMusicSelect();
         }
