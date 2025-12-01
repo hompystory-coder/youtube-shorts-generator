@@ -1,288 +1,202 @@
-const { chromium } = require('playwright');
+const playwright = require('playwright');
 
 (async () => {
-  const browser = await chromium.launch({ headless: true });
-  const context = await browser.newContext({
-    viewport: { width: 1920, height: 1080 }
-  });
-  const page = await context.newPage();
-
-  try {
-    console.log('\n========================================');
-    console.log('🚀 전체 워크플로우 테스트 시작');
-    console.log('========================================\n');
-
-    // Step 1: 로그인
-    console.log('📝 Step 1: 로그인...');
-    await page.goto('https://youtube-shorts-generator.pages.dev/login');
-    await page.waitForTimeout(3000);
-    
-    await page.fill('#email', 'hompystory@gmail.com');
-    await page.fill('#password', 'a1226119');
-    await page.click('button[type="submit"]');
-    await page.waitForTimeout(3000);
-    
-    console.log('✅ 로그인 완료\n');
-    await page.screenshot({ path: 'screenshots-test/01-login.png', fullPage: true });
-
-    // Step 2: 메인 페이지 이동
-    console.log('📝 Step 2: 메인 페이지 이동...');
-    await page.goto('https://youtube-shorts-generator.pages.dev/');
-    await page.waitForTimeout(3000);
-    
-    const apiKeysLoaded = await page.evaluate(() => {
-      return {
-        gemini: document.getElementById('geminiApiKey')?.value?.length > 0,
-        minimax: document.getElementById('minimaxApiKey')?.value?.length > 0,
-      };
+    const browser = await playwright.chromium.launch({ headless: true });
+    const context = await browser.newContext({
+        viewport: { width: 1920, height: 1080 }
     });
-    console.log('API 키 상태:', apiKeysLoaded);
-    console.log('✅ 메인 페이지 로드 완료\n');
-    await page.screenshot({ path: 'screenshots-test/02-main-page.png', fullPage: true });
+    const page = await context.newPage();
 
-    // Step 3: 블로그 크롤링
-    console.log('📝 Step 3: 블로그 크롤링...');
-    await page.fill('#blogUrl', 'https://blog.naver.com/alphahome/224056870043');
-    await page.waitForTimeout(1000);
-    
-    // 크롤링 버튼 클릭
-    await page.click('button:has-text("블로그 크롤링 시작")');
-    console.log('⏳ 크롤링 중... (최대 60초 대기)');
-    
-    // Alert 대기
-    page.on('dialog', async dialog => {
-      console.log('💬 Alert:', dialog.message());
-      await dialog.accept();
-    });
-    
-    // 이미지 로드 대기
-    await page.waitForFunction(() => {
-      const container = document.getElementById('crawledImagesContainer');
-      return container && !container.classList.contains('hidden') && container.querySelector('.image-item');
-    }, { timeout: 60000 });
-    
-    const imageCount = await page.evaluate(() => {
-      return document.querySelectorAll('.image-item').length;
-    });
-    console.log(`✅ 크롤링 완료: ${imageCount}개 이미지 발견\n`);
-    await page.screenshot({ path: 'screenshots-test/03-crawled.png', fullPage: true });
+    console.log('🌐 Starting full workflow test...\n');
 
-    if (imageCount === 0) {
-      throw new Error('크롤링된 이미지가 없습니다');
-    }
-
-    // Step 4: 이미지 선택 (첫 5개)
-    console.log('📝 Step 4: 이미지 선택 (첫 5개)...');
-    const selectedCount = await page.evaluate(() => {
-      const checkboxes = document.querySelectorAll('.image-checkbox');
-      let count = 0;
-      for (let i = 0; i < Math.min(5, checkboxes.length); i++) {
-        checkboxes[i].click();
-        count++;
-      }
-      return count;
-    });
-    console.log(`✅ ${selectedCount}개 이미지 선택 완료\n`);
-    await page.waitForTimeout(2000);
-    await page.screenshot({ path: 'screenshots-test/04-images-selected.png', fullPage: true });
-
-    // Step 5: 스크립트 생성 (자동 또는 수동)
-    console.log('📝 Step 5: 스크립트 확인...');
-    
-    // 스크립트 생성 버튼 찾기
-    const generateScriptBtn = await page.$('button:has-text("스크립트 생성")');
-    if (generateScriptBtn) {
-      console.log('스크립트 생성 버튼 클릭...');
-      await generateScriptBtn.click();
-      await page.waitForTimeout(5000);
-    }
-    
-    // 스크립트 텍스트 확인
-    let scriptText = await page.evaluate(() => {
-      const textarea = document.getElementById('scriptTextarea') || 
-                       document.querySelector('textarea[placeholder*="스크립트"]');
-      return textarea ? textarea.value : '';
-    });
-    
-    console.log(`스크립트 길이: ${scriptText.length} 자`);
-    
-    // 스크립트가 없으면 샘플 텍스트 입력
-    if (scriptText.length === 0) {
-      console.log('⚠️ 스크립트가 비어있음. 샘플 텍스트 입력...');
-      scriptText = '코지바이브 블랙트리 대형 크리스마스 트리를 소개합니다. 150개의 지네 전구가 함께 제공되는 쿨 세트입니다. 고급스러운 블랙 디자인으로 특별한 분위기를 연출하세요. 다채로운 조명 모드로 원하는 분위기를 만들 수 있습니다. 이번 크리스마스, 코지바이브와 함께 특별한 순간을 만드세요.';
-      
-      await page.evaluate((text) => {
-        const textarea = document.getElementById('scriptTextarea') || 
-                        document.querySelector('textarea[placeholder*="스크립트"]');
-        if (textarea) {
-          textarea.value = text;
-          textarea.dispatchEvent(new Event('input', { bubbles: true }));
-          textarea.dispatchEvent(new Event('change', { bubbles: true }));
-        }
-      }, scriptText);
-      
-      await page.waitForTimeout(1000);
-    }
-    
-    console.log('✅ 스크립트 준비 완료\n');
-    await page.screenshot({ path: 'screenshots-test/05-script.png', fullPage: true });
-
-    // Step 6: 음성 생성
-    console.log('📝 Step 6: 음성 생성...');
-    
-    // 음성 생성 버튼 찾기 및 스크롤
-    await page.evaluate(() => {
-      const btn = document.getElementById('generateVoiceBtn') || 
-                  document.querySelector('button:has-text("음성 생성")');
-      if (btn) btn.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    });
-    await page.waitForTimeout(2000);
-    
-    // 음성 생성 버튼 상태 확인
-    const voiceBtnStatus = await page.evaluate(() => {
-      const btn = document.getElementById('generateVoiceBtn') || 
-                  document.querySelector('button:has-text("음성 생성")');
-      return btn ? {
-        exists: true,
-        visible: btn.offsetParent !== null,
-        disabled: btn.disabled,
-        text: btn.textContent.trim()
-      } : { exists: false };
-    });
-    
-    console.log('음성 생성 버튼 상태:', voiceBtnStatus);
-    
-    if (voiceBtnStatus.exists && voiceBtnStatus.visible && !voiceBtnStatus.disabled) {
-      console.log('⏳ 음성 생성 시작... (최대 120초 대기)');
-      
-      const voiceBtn = await page.$('#generateVoiceBtn, button:has-text("음성 생성")');
-      await voiceBtn.click();
-      await page.waitForTimeout(3000);
-      
-      await page.screenshot({ path: 'screenshots-test/06-voice-generating.png', fullPage: true });
-      
-      // 음성 생성 완료 대기
-      try {
-        await page.waitForFunction(() => {
-          const btn = document.getElementById('generateVoiceBtn') || 
-                     document.querySelector('button:has-text("음성 생성")');
-          return btn && !btn.disabled && !btn.textContent.includes('생성 중');
-        }, { timeout: 120000 });
+    try {
+        // ===== 1. LOGIN =====
+        console.log('🔐 Step 1: Login');
+        await page.goto('https://youtube-shorts-generator.pages.dev/login');
+        await page.waitForLoadState('networkidle');
         
-        console.log('✅ 음성 생성 완료\n');
-        await page.screenshot({ path: 'screenshots-test/07-voice-completed.png', fullPage: true });
-      } catch (e) {
-        console.log('⚠️ 음성 생성 시간 초과 (계속 진행)\n');
-      }
-    } else {
-      console.log('❌ 음성 생성 버튼을 사용할 수 없음\n');
-      await page.screenshot({ path: 'screenshots-test/06-voice-btn-unavailable.png', fullPage: true });
-    }
-
-    // Step 7: 영상 생성
-    console.log('📝 Step 7: 영상 생성...');
-    
-    // 영상 생성 버튼 찾기 및 스크롤
-    await page.evaluate(() => {
-      const btn = document.getElementById('generateVideoBtn') || 
-                  document.querySelector('button:has-text("영상 생성")');
-      if (btn) btn.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    });
-    await page.waitForTimeout(2000);
-    
-    // 영상 생성 버튼 상태 확인
-    const videoBtnStatus = await page.evaluate(() => {
-      const btn = document.getElementById('generateVideoBtn') || 
-                  document.querySelector('button:has-text("영상 생성")');
-      return btn ? {
-        exists: true,
-        visible: btn.offsetParent !== null,
-        disabled: btn.disabled,
-        text: btn.textContent.trim()
-      } : { exists: false };
-    });
-    
-    console.log('영상 생성 버튼 상태:', videoBtnStatus);
-    
-    if (videoBtnStatus.exists && videoBtnStatus.visible && !videoBtnStatus.disabled) {
-      console.log('⏳ 영상 생성 시작... (매우 오래 걸릴 수 있음 - 최대 10분)');
-      
-      const videoBtn = await page.$('#generateVideoBtn, button:has-text("영상 생성")');
-      await videoBtn.click();
-      await page.waitForTimeout(5000);
-      
-      await page.screenshot({ path: 'screenshots-test/08-video-generating.png', fullPage: true });
-      
-      // 영상 생성 진행 상태 모니터링
-      console.log('📊 영상 생성 진행 상태 모니터링 중...');
-      
-      const startTime = Date.now();
-      let lastStatus = '';
-      
-      for (let i = 0; i < 120; i++) { // 최대 10분 (5초 x 120회)
+        await page.fill('#email', 'hompystory@gmail.com');
+        await page.fill('#password', 'a1226119');
+        await page.click('#loginButton');
+        
+        // Wait for redirect
+        await page.waitForURL('https://youtube-shorts-generator.pages.dev/', { timeout: 10000 });
+        console.log('✅ Login successful\n');
+        
+        // Wait for page to load
+        await page.waitForTimeout(3000);
+        
+        // ===== 2. CHECK BACKGROUND SETTINGS =====
+        console.log('🖼️ Step 2: Check Background Settings');
+        
+        // Check background images
+        const bgImageSelect = page.locator('#bgImageSelect');
+        await bgImageSelect.waitFor({ state: 'visible', timeout: 5000 });
+        const bgImageCount = await bgImageSelect.locator('option').count();
+        console.log(`   Background Images: ${bgImageCount} options`);
+        
+        if (bgImageCount > 1) {
+            const imageOptions = await bgImageSelect.locator('option').allTextContents();
+            console.log('   Available images:', imageOptions.slice(1).join(', '));
+            // Select first image
+            await bgImageSelect.selectOption({ index: 1 });
+            console.log('   ✅ Selected first background image');
+        } else {
+            console.log('   ⚠️ No background images loaded');
+        }
+        
+        // Check background music
+        const bgMusicSelect = page.locator('#bgMusicSelect');
+        const bgMusicCount = await bgMusicSelect.locator('option').count();
+        console.log(`   Background Music: ${bgMusicCount} options`);
+        
+        if (bgMusicCount > 1) {
+            const musicOptions = await bgMusicSelect.locator('option').allTextContents();
+            console.log('   Available music:', musicOptions.slice(1).join(', '));
+            // Select first music
+            await bgMusicSelect.selectOption({ index: 1 });
+            console.log('   ✅ Selected first background music');
+        } else {
+            console.log('   ⚠️ No background music loaded');
+        }
+        
+        await page.screenshot({ path: 'screenshots-test/step2-backgrounds.png' });
+        console.log('   📸 Screenshot saved\n');
+        
+        // ===== 3. VOICE PREVIEW TEST =====
+        console.log('🎤 Step 3: Voice Preview Test');
+        
+        const voiceSelect = page.locator('#minimaxVoiceSelect');
+        await voiceSelect.selectOption('Calm_Woman');
+        console.log('   Selected voice: Calm_Woman');
+        
+        const previewBtn = page.locator('#previewVoiceBtn');
+        await previewBtn.click();
+        console.log('   Clicked voice preview button');
+        
+        // Wait for response
+        await page.waitForTimeout(3000);
+        
+        const btnText = await page.locator('#previewVoiceText').textContent();
+        console.log(`   Button status: "${btnText}"`);
+        
+        await page.screenshot({ path: 'screenshots-test/step3-voice-preview.png' });
+        console.log('   📸 Screenshot saved\n');
+        
+        // ===== 4. FONT PREVIEW TEST =====
+        console.log('🔤 Step 4: Font Preview Test');
+        
+        const fontSelect = page.locator('#fontSelect');
+        await fontSelect.selectOption('Black Han Sans');
+        console.log('   Selected font: Black Han Sans');
+        await page.waitForTimeout(500);
+        
+        await fontSelect.selectOption('Jua');
+        console.log('   Selected font: Jua');
+        await page.waitForTimeout(500);
+        
+        await fontSelect.selectOption('Noto Sans KR');
+        console.log('   Selected font: Noto Sans KR (default)');
+        
+        await page.screenshot({ path: 'screenshots-test/step4-font-preview.png' });
+        console.log('   📸 Screenshot saved\n');
+        
+        // ===== 5. OTHER SETTINGS TEST =====
+        console.log('⚙️ Step 5: Other Settings Test');
+        
+        // Caption size
+        const captionSizeSelect = page.locator('#captionSizeSelect');
+        if (await captionSizeSelect.count() > 0) {
+            await captionSizeSelect.selectOption('large');
+            console.log('   Caption size: Large');
+            await page.waitForTimeout(300);
+        }
+        
+        // Caption color
+        const captionColorSelect = page.locator('#captionColorSelect');
+        if (await captionColorSelect.count() > 0) {
+            await captionColorSelect.selectOption('yellow');
+            console.log('   Caption color: Yellow');
+            await page.waitForTimeout(300);
+        }
+        
+        // Shadow effect
+        const shadowEffectSelect = page.locator('#shadowEffectSelect');
+        if (await shadowEffectSelect.count() > 0) {
+            await shadowEffectSelect.selectOption('strong');
+            console.log('   Shadow effect: Strong');
+            await page.waitForTimeout(300);
+        }
+        
+        // Image transition
+        const imageTransitionSelect = page.locator('#imageTransitionSelect');
+        if (await imageTransitionSelect.count() > 0) {
+            await imageTransitionSelect.selectOption('slideLeft');
+            console.log('   Image transition: Slide Left');
+            await page.waitForTimeout(300);
+        }
+        
+        // Video style
+        const videoStyleSelect = page.locator('#videoStyleSelect');
+        if (await videoStyleSelect.count() > 0) {
+            await videoStyleSelect.selectOption('calm');
+            console.log('   Video style: Calm');
+            await page.waitForTimeout(300);
+        }
+        
+        await page.screenshot({ path: 'screenshots-test/step5-other-settings.png' });
+        console.log('   📸 Screenshot saved\n');
+        
+        // ===== 6. BLOG CRAWLING TEST =====
+        console.log('🔍 Step 6: Blog Crawling Test');
+        
+        const blogUrlInput = page.locator('#blogUrl');
+        await blogUrlInput.fill('https://blog.naver.com/sbtmdusgkq/224059538276');
+        console.log('   Entered blog URL: https://blog.naver.com/sbtmdusgkq/224059538276');
+        
+        // Click crawl button (find by text)
+        const crawlButton = page.locator('button:has-text("블로그 크롤링 시작")');
+        await crawlButton.click();
+        console.log('   Clicked crawl button');
+        
+        // Wait for crawling to complete
+        console.log('   Waiting for crawl to complete...');
+        await page.waitForTimeout(10000);
+        
+        // Check for images
+        const imageContainer = page.locator('#crawledImagesContainer');
+        const isVisible = await imageContainer.isVisible();
+        
+        if (isVisible) {
+            const imageCount = await imageContainer.locator('input[type="checkbox"]').count();
+            console.log(`   ✅ Crawling successful! Found ${imageCount} images`);
+            
+            // Select some images
+            if (imageCount > 0) {
+                const checkboxes = imageContainer.locator('input[type="checkbox"]');
+                const selectCount = Math.min(5, imageCount);
+                for (let i = 0; i < selectCount; i++) {
+                    await checkboxes.nth(i).check();
+                }
+                console.log(`   ✅ Selected ${selectCount} images`);
+            }
+        } else {
+            console.log('   ⚠️ Image container not visible');
+        }
+        
+        await page.screenshot({ path: 'screenshots-test/step6-blog-crawl.png', fullPage: true });
+        console.log('   📸 Screenshot saved\n');
+        
+        console.log('✅ Full workflow test completed!');
+        console.log('\n📁 Screenshots saved in screenshots-test/');
+        
+        // Keep browser open for inspection
         await page.waitForTimeout(5000);
         
-        const status = await page.evaluate(() => {
-          const btn = document.getElementById('generateVideoBtn') || 
-                     document.querySelector('button:has-text("영상 생성")');
-          const statusText = document.querySelector('.status-message, .progress-text');
-          return {
-            btnText: btn ? btn.textContent.trim() : '',
-            statusText: statusText ? statusText.textContent.trim() : '',
-            btnDisabled: btn ? btn.disabled : true
-          };
-        });
-        
-        if (status.btnText !== lastStatus || status.statusText) {
-          const elapsed = Math.round((Date.now() - startTime) / 1000);
-          console.log(`   [${elapsed}초] ${status.btnText}${status.statusText ? ' - ' + status.statusText : ''}`);
-          lastStatus = status.btnText;
-        }
-        
-        // 완료 확인
-        if (!status.btnDisabled && !status.btnText.includes('생성 중')) {
-          console.log('✅ 영상 생성 완료!\n');
-          await page.screenshot({ path: 'screenshots-test/09-video-completed.png', fullPage: true });
-          
-          // 생성된 영상 확인
-          const videoResult = await page.evaluate(() => {
-            const videoEl = document.querySelector('video');
-            const downloadLink = document.querySelector('a[download]');
-            return {
-              hasVideo: !!videoEl,
-              videoSrc: videoEl ? videoEl.src : null,
-              hasDownload: !!downloadLink,
-              downloadHref: downloadLink ? downloadLink.href : null
-            };
-          });
-          
-          console.log('생성된 영상 정보:', videoResult);
-          break;
-        }
-        
-        // 매 30초마다 스크린샷
-        if (i % 6 === 0) {
-          await page.screenshot({ 
-            path: `screenshots-test/08-video-progress-${Math.floor(i/6)}.png`, 
-            fullPage: true 
-          });
-        }
-      }
-      
-    } else {
-      console.log('❌ 영상 생성 버튼을 사용할 수 없음');
-      await page.screenshot({ path: 'screenshots-test/08-video-btn-unavailable.png', fullPage: true });
+    } catch (error) {
+        console.error('❌ Error during workflow test:', error.message);
+        await page.screenshot({ path: 'screenshots-test/error.png' });
+    } finally {
+        await browser.close();
     }
-
-    console.log('\n========================================');
-    console.log('✅ 전체 워크플로우 테스트 완료');
-    console.log('========================================\n');
-
-  } catch (error) {
-    console.error('\n❌ 오류 발생:', error.message);
-    console.error('스택:', error.stack);
-    await page.screenshot({ path: 'screenshots-test/error-final.png', fullPage: true });
-  } finally {
-    await browser.close();
-  }
 })();

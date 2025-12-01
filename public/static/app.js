@@ -1,3 +1,4 @@
+// Force update v1.0.2
 // YouTube Shorts Generator - Main Application JavaScript
 // Version: 1.0.1 - Voice Preview Update
 

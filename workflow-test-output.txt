@@ -1,0 +1,39 @@
+🌐 Starting full workflow test...
+
+🔐 Step 1: Login
+✅ Login successful
+
+🖼️ Step 2: Check Background Settings
+   Background Images: 1 options
+   ⚠️ No background images loaded
+   Background Music: 1 options
+   ⚠️ No background music loaded
+   📸 Screenshot saved
+
+🎤 Step 3: Voice Preview Test
+   Selected voice: Calm_Woman
+   Clicked voice preview button
+   Button status: "음성 미리듣기"
+   📸 Screenshot saved
+
+🔤 Step 4: Font Preview Test
+   Selected font: Black Han Sans
+   Selected font: Jua
+   Selected font: Noto Sans KR (default)
+   📸 Screenshot saved
+
+⚙️ Step 5: Other Settings Test
+   Image transition: Slide Left
+   Video style: Calm
+   📸 Screenshot saved
+
+🔍 Step 6: Blog Crawling Test
+   Entered blog URL: https://blog.naver.com/sbtmdusgkq/224059538276
+   Clicked crawl button
+   Waiting for crawl to complete...
+   ⚠️ Image container not visible
+   📸 Screenshot saved
+
+✅ Full workflow test completed!
+
+📁 Screenshots saved in screenshots-test/
