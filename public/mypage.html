@@ -805,9 +805,13 @@
         function displayBgmList(bgms) {
             const listEl = document.getElementById('bgmList');
             
+            // 업로드된 항목 추가
+            const uploadedBgms = JSON.parse(sessionStorage.getItem('uploadedBgms') || '[]');
+            const allBgms = [...uploadedBgms, ...bgms];
+            
             // 삭제된 항목 필터링
             const deletedBgms = JSON.parse(sessionStorage.getItem('deletedBgms') || '[]');
-            const filteredBgms = bgms.filter(bgm => !deletedBgms.includes(bgm.id));
+            const filteredBgms = allBgms.filter(bgm => !deletedBgms.includes(bgm.id));
             
             if (!filteredBgms || filteredBgms.length === 0) {
                 listEl.innerHTML = `
@@ -843,9 +847,13 @@
         function displayBgImageList(images) {
             const listEl = document.getElementById('bgImageList');
             
+            // 업로드된 항목 추가
+            const uploadedImages = JSON.parse(sessionStorage.getItem('uploadedBgImages') || '[]');
+            const allImages = [...uploadedImages, ...images];
+            
             // 삭제된 항목 필터링
             const deletedImages = JSON.parse(sessionStorage.getItem('deletedBgImages') || '[]');
-            const filteredImages = images.filter(img => !deletedImages.includes(img.id));
+            const filteredImages = allImages.filter(img => !deletedImages.includes(img.id));
             
             if (!filteredImages || filteredImages.length === 0) {
                 listEl.innerHTML = `
@@ -914,7 +922,13 @@
 
                     const data = await response.json();
                     if (data.success) {
-                        console.log('✅ 배경음악 업로드 성공');
+                        console.log('✅ 배경음악 업로드 성공:', data.data);
+                        
+                        // 업로드된 항목을 sessionStorage에 저장
+                        const uploadedBgms = JSON.parse(sessionStorage.getItem('uploadedBgms') || '[]');
+                        uploadedBgms.unshift(data.data); // 맨 앞에 추가
+                        sessionStorage.setItem('uploadedBgms', JSON.stringify(uploadedBgms));
+                        
                         await loadBackgroundSettings();
                         event.target.value = '';
                         alert('✅ 배경음악이 성공적으로 업로드되었습니다!');
@@ -976,7 +990,13 @@
 
                     const data = await response.json();
                     if (data.success) {
-                        console.log('✅ 배경 이미지 업로드 성공');
+                        console.log('✅ 배경 이미지 업로드 성공:', data.data);
+                        
+                        // 업로드된 항목을 sessionStorage에 저장
+                        const uploadedImages = JSON.parse(sessionStorage.getItem('uploadedBgImages') || '[]');
+                        uploadedImages.unshift(data.data); // 맨 앞에 추가
+                        sessionStorage.setItem('uploadedBgImages', JSON.stringify(uploadedImages));
+                        
                         await loadBackgroundSettings();
                         event.target.value = '';
                         alert('✅ 배경 이미지가 성공적으로 업로드되었습니다!');
