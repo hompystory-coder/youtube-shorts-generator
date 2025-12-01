@@ -867,3 +867,5 @@ window.displayBlogImages = displayBlogImages;
 window.loadUserBackgrounds = loadUserBackgrounds;
 
 console.log('✅ Global functions registered');
+// Deployed at: Mon Dec  1 06:20:30 UTC 2025
+// Cache bust: 1764571239
