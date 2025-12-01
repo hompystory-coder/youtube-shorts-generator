@@ -604,7 +604,10 @@ async function previewVoice() {
         
         const data = await response.json();
         
+        console.log('📦 API Response:', data);
+        
         if (!data.success) {
+            console.error('❌ API Error Details:', data.debug);
             throw new Error(data.error || '음성 생성 실패');
         }
         

@@ -34,38 +34,30 @@ export async function onRequestPost(context) {
 
     console.log(`🎤 음성 미리듣기 시작: voice=${voice}, text=${text.substring(0, 30)}...`);
 
-    // Minimax TTS API 호출
-    const minimaxResponse = await fetch('https://api.minimax.chat/v1/text_to_speech?GroupId=' + (groupId || ''), {
+    // Minimax TTS API 호출 (올바른 엔드포인트: api.minimaxi.chat)
+    const minimaxResponse = await fetch('https://api.minimaxi.chat/v1/text_to_speech?GroupId=' + (groupId || ''), {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model: 'speech-01-turbo',
+        model: 'speech-01',
         text: text,
-        stream: false,
-        voice_setting: {
-          voice_id: voice || 'Friendly_Person',
-          speed: 1.0,
-          vol: 1.0,
-          pitch: 0
-        },
-        audio_setting: {
-          sample_rate: 24000,
-          bitrate: 128000,
-          format: 'mp3'
-        }
+        voice_id: voice || 'Podcast_girl'
       })
     });
 
+    console.log('🔍 Minimax API 요청 완료, Status:', minimaxResponse.status);
+    
     if (!minimaxResponse.ok) {
       const errorText = await minimaxResponse.text();
       console.error('❌ Minimax API 오류:', errorText);
       
       return new Response(JSON.stringify({
         success: false,
-        error: `Minimax API 오류: ${minimaxResponse.status} - ${errorText}`
+        error: `Minimax API 오류: ${minimaxResponse.status}`,
+        details: errorText.substring(0, 200)
       }), {
         status: 500,
         headers: {
