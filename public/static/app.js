@@ -10,6 +10,8 @@ let selectedImages = [];
 let generatedScript = '';
 let generatedAudioUrl = '';
 let generatedVideoUrl = '';
+let userBackgroundImages = [];
+let userBackgroundMusic = [];
 
 // API Base URL
 const API_BASE = '';  // Cloudflare Pages Functions use relative paths
@@ -91,6 +93,9 @@ document.addEventListener('DOMContentLoaded', async function() {
     
     // Check authentication
     await checkAuth();
+    
+    // Load user's background images and music
+    await loadUserBackgrounds();
     
     // Setup event listeners
     setupEventListeners();
@@ -680,10 +685,96 @@ function displayBlogImages(images) {
     console.log(`✅ Displayed ${images.length} images in grid`);
 }
 
+// Load user's background images and music from API
+async function loadUserBackgrounds() {
+    const userInfo = localStorage.getItem('user_info');
+    if (!userInfo) {
+        console.log('⚠️ No user info, skipping background load');
+        return;
+    }
+    
+    const user = JSON.parse(userInfo);
+    const userId = user.id;
+    const token = localStorage.getItem('jwt_token') || localStorage.getItem('auth_token');
+    
+    try {
+        // Load background images
+        const imagesResponse = await fetch(`${API_BASE}/api/background-images?userId=${userId}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        if (imagesResponse.ok) {
+            const imagesData = await imagesResponse.json();
+            userBackgroundImages = imagesData.images || [];
+            console.log('✅ Loaded background images:', userBackgroundImages.length);
+            populateBgImageSelect();
+        }
+        
+        // Load background music
+        const musicResponse = await fetch(`${API_BASE}/api/background-music?userId=${userId}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        if (musicResponse.ok) {
+            const musicData = await musicResponse.json();
+            userBackgroundMusic = musicData.music || [];
+            console.log('✅ Loaded background music:', userBackgroundMusic.length);
+            populateBgMusicSelect();
+        }
+    } catch (error) {
+        console.error('❌ Error loading backgrounds:', error);
+    }
+}
+
+// Populate background image select dropdown
+function populateBgImageSelect() {
+    const select = document.getElementById('bgImageSelect');
+    if (!select) return;
+    
+    // Clear existing options except the first one
+    select.innerHTML = '<option value="">선택 안함 (기본 이미지 사용)</option>';
+    
+    // Add user's uploaded images
+    userBackgroundImages.forEach(image => {
+        const option = document.createElement('option');
+        option.value = image.id;
+        option.textContent = image.name;
+        option.dataset.url = image.url || image.data_url;
+        select.appendChild(option);
+    });
+    
+    console.log(`✅ Populated ${userBackgroundImages.length} background images`);
+}
+
+// Populate background music select dropdown
+function populateBgMusicSelect() {
+    const select = document.getElementById('bgMusicSelect');
+    if (!select) return;
+    
+    // Clear existing options except the first one
+    select.innerHTML = '<option value="">선택 안함 (음악 없음)</option>';
+    
+    // Add user's uploaded music
+    userBackgroundMusic.forEach(music => {
+        const option = document.createElement('option');
+        option.value = music.id;
+        option.textContent = `${music.name} (${music.duration || 0}초)`;
+        option.dataset.url = music.url || music.data_url;
+        select.appendChild(option);
+    });
+    
+    console.log(`✅ Populated ${userBackgroundMusic.length} background music`);
+}
+
 // Make functions globally accessible
 window.previewVoice = previewVoice;
 window.onStageChanged = onStageChanged;
 window.crawlBlog = crawlBlog;
 window.displayBlogImages = displayBlogImages;
+window.loadUserBackgrounds = loadUserBackgrounds;
 
 console.log('✅ Global functions registered');
