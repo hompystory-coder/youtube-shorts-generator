@@ -77,14 +77,20 @@ export async function onRequestPost(context) {
 
     const result = await minimaxResponse.json();
     
+    console.log('📦 Minimax API 응답:', JSON.stringify(result));
+    
     // Minimax API 응답에서 오디오 URL 추출
-    const audioUrl = result.audio_file || result.data?.audio_file;
+    // 가능한 경로들: result.audio_file, result.data.audio_file, result.extra_info.audio_file
+    const audioUrl = result.audio_file || 
+                     result.data?.audio_file || 
+                     result.extra_info?.audio_file;
     
     if (!audioUrl) {
-      console.error('❌ 오디오 URL을 찾을 수 없음:', result);
+      console.error('❌ 오디오 URL을 찾을 수 없음:', JSON.stringify(result, null, 2));
       return new Response(JSON.stringify({
         success: false,
-        error: '음성 생성에 실패했습니다.'
+        error: '음성 생성에 실패했습니다. API 응답에 오디오 파일이 없습니다.',
+        debug: result
       }), {
         status: 500,
         headers: {
