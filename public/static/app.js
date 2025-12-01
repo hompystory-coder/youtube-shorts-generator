@@ -1,5 +1,5 @@
 // YouTube Shorts Generator - Main Application JavaScript
-// Version: 1.0.0
+// Version: 1.0.1 - Voice Preview Update
 
 console.log('🚀 App.js loaded');
 
