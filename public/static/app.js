@@ -550,9 +550,95 @@ if (typeof closePricingModal === 'undefined') {
 console.log('✅ App.js initialized');
 
 // Preview voice function
-function previewVoice() {
+async function previewVoice() {
     console.log('🎤 Preview voice clicked');
-    alert('음성 미리듣기 기능은 준비 중입니다.');
+    
+    const voiceSelect = document.getElementById('minimaxVoiceSelect');
+    const previewBtn = document.getElementById('previewVoiceBtn');
+    const previewText = document.getElementById('previewVoiceText');
+    const previewIcon = document.getElementById('previewVoiceIcon');
+    const audioElement = document.getElementById('voicePreviewAudio');
+    
+    if (!voiceSelect) {
+        alert('음성 선택 요소를 찾을 수 없습니다.');
+        return;
+    }
+    
+    const selectedVoice = voiceSelect.value;
+    
+    // Get API keys from hidden inputs (loaded from mypage)
+    const minimaxApiKey = document.getElementById('minimaxApiKey')?.value;
+    const minimaxGroupId = document.getElementById('minimaxGroupId')?.value;
+    
+    if (!minimaxApiKey) {
+        alert('⚠️ Minimax API 키가 설정되지 않았습니다.\n\n마이페이지 → API 키 탭에서 Minimax API 키를 먼저 설정해주세요.');
+        return;
+    }
+    
+    // Sample text for preview
+    const sampleText = '안녕하세요. 이것은 음성 미리듣기 샘플입니다. 선택하신 목소리로 유튜브 쇼츠가 생성됩니다.';
+    
+    try {
+        // Disable button
+        if (previewBtn) {
+            previewBtn.disabled = true;
+            previewText.textContent = '생성 중...';
+            previewIcon.className = 'fas fa-spinner fa-spin';
+        }
+        
+        console.log('🎤 Calling voice preview API...');
+        
+        const response = await fetch(`${API_BASE}/api/voice/preview`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                text: sampleText,
+                voice: selectedVoice,
+                apiKey: minimaxApiKey,
+                groupId: minimaxGroupId
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (!data.success) {
+            throw new Error(data.error || '음성 생성 실패');
+        }
+        
+        console.log('✅ Voice preview generated:', data.data.audioUrl);
+        
+        // Play audio
+        if (audioElement && data.data.audioUrl) {
+            audioElement.src = data.data.audioUrl;
+            audioElement.play();
+            
+            // Update button to stop state
+            previewText.textContent = '재생 중...';
+            previewIcon.className = 'fas fa-stop';
+            
+            // Reset button when audio ends
+            audioElement.onended = () => {
+                previewText.textContent = '음성 미리듣기';
+                previewIcon.className = 'fas fa-play';
+                if (previewBtn) previewBtn.disabled = false;
+            };
+        } else {
+            throw new Error('오디오 URL을 받지 못했습니다.');
+        }
+        
+    } catch (error) {
+        console.error('❌ Voice preview error:', error);
+        alert('음성 미리듣기 실패: ' + error.message);
+        
+        // Reset button
+        if (previewBtn) {
+            previewBtn.disabled = false;
+            previewText.textContent = '음성 미리듣기';
+            previewIcon.className = 'fas fa-play';
+        }
+    }
 }
 
 // Stage change handler (placeholder)
