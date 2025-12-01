@@ -1,0 +1,11 @@
+# Redirect .html extensions to clean URLs
+/login.html /login 301
+/signup.html /signup 301
+/payment.html /payment 301
+/mypage.html /mypage 301
+
+# SPA fallback for clean URLs
+/login /login.html 200
+/signup /signup.html 200
+/payment /payment.html 200
+/mypage /mypage.html 200
