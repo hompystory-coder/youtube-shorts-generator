@@ -24,16 +24,60 @@ export async function onRequestPost(context) {
       });
     }
     
-    // Parse form data
-    const formData = await request.formData();
-    const file = formData.get('file');
+    // Check content type and parse accordingly
+    const contentType = request.headers.get('Content-Type') || '';
+    let fileName, fileData, userId, duration;
     
-    if (!file) {
+    if (contentType.includes('application/json')) {
+      // Handle JSON upload (data URL from browser)
+      const body = await request.json();
+      fileName = body.name;
+      fileData = body.dataUrl;
+      userId = body.userId;
+      duration = body.duration || 180;
+      
+      if (!fileName || !fileData) {
+        return new Response(JSON.stringify({
+          success: false,
+          message: 'File name and data are required'
+        }), {
+          status: 400,
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*'
+          }
+        });
+      }
+      
+      console.log('[Background Music Upload] JSON upload:', fileName);
+      
+    } else if (contentType.includes('multipart/form-data')) {
+      // Handle FormData upload
+      const formData = await request.formData();
+      const file = formData.get('file');
+      
+      if (!file) {
+        return new Response(JSON.stringify({
+          success: false,
+          message: 'No file provided'
+        }), {
+          status: 400,
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*'
+          }
+        });
+      }
+      
+      fileName = file.name;
+      console.log('[Background Music Upload] FormData upload:', fileName, 'Size:', file.size);
+      
+    } else {
       return new Response(JSON.stringify({
         success: false,
-        message: 'No file provided'
+        message: 'Unsupported Content-Type'
       }), {
-        status: 400,
+        status: 415,
         headers: {
           'Content-Type': 'application/json',
           'Access-Control-Allow-Origin': '*'
@@ -41,16 +85,14 @@ export async function onRequestPost(context) {
       });
     }
     
-    console.log('[Background Music Upload] File received:', file.name, 'Size:', file.size);
-    
     // In production, upload to Cloudflare R2 or other storage
     // For now, return mock success response
     const mockUploadResult = {
       id: `bgm_${Date.now()}`,
-      name: file.name,
-      url: `https://example.com/uploads/${file.name}`,
-      size: (file.size / (1024 * 1024)).toFixed(2), // MB
-      duration: 180, // Mock duration
+      name: fileName,
+      url: `https://example.com/uploads/${fileName}`,
+      size: '2.5', // MB
+      duration: duration || 180,
       uploadedAt: new Date().toISOString()
     };
     

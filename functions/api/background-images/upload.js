@@ -24,16 +24,59 @@ export async function onRequestPost(context) {
       });
     }
     
-    // Parse form data
-    const formData = await request.formData();
-    const file = formData.get('file');
+    // Check content type and parse accordingly
+    const contentType = request.headers.get('Content-Type') || '';
+    let fileName, fileData, userId;
     
-    if (!file) {
+    if (contentType.includes('application/json')) {
+      // Handle JSON upload (data URL from browser)
+      const body = await request.json();
+      fileName = body.name;
+      fileData = body.dataUrl;
+      userId = body.userId;
+      
+      if (!fileName || !fileData) {
+        return new Response(JSON.stringify({
+          success: false,
+          message: 'File name and data are required'
+        }), {
+          status: 400,
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*'
+          }
+        });
+      }
+      
+      console.log('[Background Images Upload] JSON upload:', fileName);
+      
+    } else if (contentType.includes('multipart/form-data')) {
+      // Handle FormData upload
+      const formData = await request.formData();
+      const file = formData.get('file');
+      
+      if (!file) {
+        return new Response(JSON.stringify({
+          success: false,
+          message: 'No file provided'
+        }), {
+          status: 400,
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*'
+          }
+        });
+      }
+      
+      fileName = file.name;
+      console.log('[Background Images Upload] FormData upload:', fileName, 'Size:', file.size);
+      
+    } else {
       return new Response(JSON.stringify({
         success: false,
-        message: 'No file provided'
+        message: 'Unsupported Content-Type'
       }), {
-        status: 400,
+        status: 415,
         headers: {
           'Content-Type': 'application/json',
           'Access-Control-Allow-Origin': '*'
@@ -41,15 +84,13 @@ export async function onRequestPost(context) {
       });
     }
     
-    console.log('[Background Images Upload] File received:', file.name, 'Size:', file.size);
-    
     // In production, upload to Cloudflare R2 or other storage
     // For now, return mock success response
     const mockUploadResult = {
       id: `img_${Date.now()}`,
-      name: file.name,
+      name: fileName,
       url: `https://images.unsplash.com/photo-${Date.now()}?w=400`,
-      size: (file.size / (1024 * 1024)).toFixed(2), // MB
+      size: '1.5', // MB
       uploadedAt: new Date().toISOString()
     };
     
