@@ -1,6 +1,11 @@
 // Login API with Supabase
 import supabase from '../../../lib/supabase.js';
-import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
+
+// Hash password with SHA-256
+function hashPassword(password) {
+  return crypto.createHash('sha256').update(password).digest('hex');
+}
 
 export async function onRequestPost(context) {
   try {
@@ -44,11 +49,14 @@ export async function onRequestPost(context) {
       });
     }
 
-    // Verify password
-    const isPasswordValid = await bcrypt.compare(password, user.password_hash);
+    // Verify password (SHA-256)
+    const passwordHash = hashPassword(password);
+    const isPasswordValid = (passwordHash === user.password);
     
     if (!isPasswordValid) {
       console.log('[Login API] Invalid password for:', email);
+      console.log('[Login API] Expected hash:', user.password);
+      console.log('[Login API] Provided hash:', passwordHash);
       return new Response(JSON.stringify({
         success: false,
         error: '이메일 또는 비밀번호가 올바르지 않습니다.'
@@ -74,7 +82,8 @@ export async function onRequestPost(context) {
         id: user.id,
         email: user.email,
         name: user.name,
-        subscription_status: user.subscription_type
+        role: user.role,
+        subscription_status: user.subscription_status
       }
     }), {
       status: 200,
