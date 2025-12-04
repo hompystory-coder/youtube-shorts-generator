@@ -23,8 +23,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Import API handlers
 import { onRequestPost as loginHandler, onRequestOptions as loginOptions } from './functions/api/auth/login.js';
 import { onRequestGet as settingsGetHandler, onRequestPost as settingsPostHandler, onRequestOptions as settingsOptions } from './functions/api/settings/[userId].js';
-import { onRequestGet as bgImagesHandler } from './functions/api/background-images.js';
-import { onRequestGet as bgMusicHandler } from './functions/api/background-music.js';
+import { onRequestGet as bgImagesHandler } from './functions/api/background-images/index.js';
+import { onRequestGet as bgMusicHandler } from './functions/api/background-music/index.js';
 import { onRequestPost as voicePreviewHandler, onRequestOptions as voicePreviewOptions } from './functions/api/voice/preview.js';
 import { onRequestPost as crawlBlogHandler, onRequestOptions as crawlBlogOptions } from './functions/api/crawl/blog.js';
 
