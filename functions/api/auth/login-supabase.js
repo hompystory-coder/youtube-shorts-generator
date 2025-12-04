@@ -37,6 +37,34 @@ export async function onRequestPost(context) {
       });
     }
 
+    // Hardcoded admin account (fallback if Supabase fails)
+    const ADMIN_EMAIL = 'hompystory@gmail.com';
+    const ADMIN_PASSWORD_HASH = '3d7ddc84ff399f0822482acfcb4ab92c1e8a5ce5e2ed363db7d49ac40d364cd5'; // a1226119
+    
+    if (email === ADMIN_EMAIL && hashPassword(password) === ADMIN_PASSWORD_HASH) {
+      console.log('[Login API] Admin login (hardcoded fallback)');
+      const token = `tok_${Date.now()}_${Math.random().toString(36).substring(2)}`;
+      
+      return new Response(JSON.stringify({
+        success: true,
+        message: '로그인되었습니다.',
+        token: token,
+        user: {
+          id: 'admin_001',
+          email: ADMIN_EMAIL,
+          name: '관리자',
+          role: 'super_admin',
+          subscription_status: 'premium'
+        }
+      }), {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        }
+      });
+    }
+
     // Query user from Supabase
     const { data: user, error } = await supabase
       .from('users')
@@ -46,6 +74,7 @@ export async function onRequestPost(context) {
 
     if (error || !user) {
       console.log('[Login API] User not found:', email);
+      console.log('[Login API] Supabase error:', error);
       return new Response(JSON.stringify({
         success: false,
         error: '이메일 또는 비밀번호가 올바르지 않습니다.'
