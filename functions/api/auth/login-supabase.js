@@ -10,7 +10,16 @@ function hashPassword(password) {
 export async function onRequestPost(context) {
   try {
     const { request } = context;
-    const { email, password } = await request.json();
+    
+    // Support both Cloudflare (request.json()) and Express (request.body)
+    let email, password;
+    if (typeof request.json === 'function') {
+      // Cloudflare Pages Functions
+      ({ email, password } = await request.json());
+    } else {
+      // Express server
+      ({ email, password } = request.body);
+    }
 
     console.log('[Login API] Login attempt:', email);
 

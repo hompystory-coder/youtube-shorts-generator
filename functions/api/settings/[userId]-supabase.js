@@ -76,7 +76,14 @@ export async function onRequestPost(context) {
   try {
     const { params, request } = context;
     const userId = params.userId;
-    const body = await request.json();
+    
+    // Support both Cloudflare (request.json()) and Express (request.body)
+    let body;
+    if (typeof request.json === 'function') {
+      body = await request.json();
+    } else {
+      body = request.body;
+    }
     
     console.log('[Settings API] Save settings for user:', userId);
     
