@@ -1,5 +1,31 @@
 {
+  "name": "youtube-shorts-generator",
+  "version": "1.0.0",
+  "description": "YouTube Shorts Generator - AI-powered video creation",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "pm2:start": "pm2 start ecosystem.config.cjs",
+    "pm2:stop": "pm2 stop youtube-shorts-generator",
+    "pm2:restart": "pm2 restart youtube-shorts-generator",
+    "pm2:logs": "pm2 logs youtube-shorts-generator --nostream",
+    "pm2:delete": "pm2 delete youtube-shorts-generator",
+    "deploy": "git pull && npm install && pm2 restart youtube-shorts-generator"
+  },
+  "keywords": ["youtube", "shorts", "video", "ai", "generator"],
+  "author": "hompystory",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5"
+  },
   "devDependencies": {
     "playwright": "^1.57.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
   }
 }

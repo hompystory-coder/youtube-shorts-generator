@@ -7,19 +7,37 @@ pids
 *.seed
 *.pid.lock
 
-# Compiled binary addons
-build
-
-# dotenv environment variables file
-.env
-.env.local
-.dev.vars
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
 # PM2
 .pm2/
 pids/
-logs/
-*.log
+
+# dotenv environment variables file
+.env
+.env.local
+.env.production
+
+# Build output
+dist/
+build/
+.wrangler/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
 
 # Backup files
 *.backup
@@ -27,19 +45,7 @@ logs/
 *.tar.gz
 *.zip
 
-# OS files
-.DS_Store
-Thumbs.db
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# Wrangler
-.wrangler/
-wrangler.toml.bak
-
-# Test screenshots
-screenshots*/
+# Test files
+test-*.js
+test-*.sh
+screenshots-test/
