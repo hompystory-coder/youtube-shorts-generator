@@ -6,12 +6,6 @@
     <title>마이페이지 - YouTube Shorts Generator</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
-    <style>
-        .tab-button.active {
-            background: linear-gradient(to right, #9333ea, #ec4899);
-            color: white;
-        }
-    </style>
 </head>
 <body class="bg-gradient-to-br from-purple-50 to-pink-50 min-h-screen">
     <!-- 헤더 -->
@@ -24,7 +18,7 @@
                 </div>
                 <div class="flex items-center gap-4">
                     <div class="flex items-center gap-2">
-                        <img src="" alt="Profile" class="w-10 h-10 rounded-full border-2 border-purple-500" id="userAvatar">
+                        <i class="fas fa-user-circle text-3xl text-purple-500"></i>
                         <div>
                             <p class="font-semibold text-gray-800" id="userName">로딩중...</p>
                             <p class="text-xs text-gray-500" id="userEmail"></p>
@@ -42,293 +36,113 @@
     </header>
 
     <!-- 메인 컨텐츠 -->
-    <main class="max-w-6xl mx-auto px-4 py-8">
-        <!-- 상단 통계 카드 -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-            <div class="bg-white rounded-xl shadow-lg p-6 text-center">
-                <div class="text-4xl font-bold text-blue-600" id="totalVideos">0</div>
-                <div class="text-sm text-gray-600 mt-2">생성한 영상</div>
+    <main class="max-w-4xl mx-auto px-4 py-8">
+        <!-- API 키 설정 -->
+        <div class="bg-white rounded-xl shadow-lg p-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">
+                <i class="fas fa-key mr-2 text-purple-600"></i>
+                API 키 설정
+            </h2>
+
+            <form id="apiKeysForm" class="space-y-6">
+                <!-- Gemini API Key -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        <i class="fas fa-robot mr-1 text-blue-500"></i>
+                        Gemini API Key (스크립트 생성용)
+                    </label>
+                    <input type="text" id="geminiApiKey" 
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        placeholder="AIzaSy..." />
+                    <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-xs text-blue-600 hover:underline mt-1 inline-block">
+                        <i class="fas fa-external-link-alt mr-1"></i>Google AI Studio에서 발급받기
+                    </a>
+                </div>
+
+                <!-- Minimax API Key -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        <i class="fas fa-microphone mr-1 text-green-500"></i>
+                        Minimax API Key (음성 생성용)
+                    </label>
+                    <input type="password" id="minimaxApiKey" 
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        placeholder="eyJhbGciOi..." />
+                    <a href="https://platform.minimaxi.com" target="_blank" class="text-xs text-blue-600 hover:underline mt-1 inline-block">
+                        <i class="fas fa-external-link-alt mr-1"></i>Minimax 플랫폼에서 발급받기
+                    </a>
+                </div>
+
+                <!-- Minimax Group ID -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        <i class="fas fa-users mr-1 text-purple-500"></i>
+                        Minimax Group ID
+                    </label>
+                    <input type="text" id="minimaxGroupId" 
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        placeholder="1977057..." />
+                </div>
+
+                <!-- Shotstack API Key -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        <i class="fas fa-video mr-1 text-red-500"></i>
+                        Shotstack API Key (비디오 편집용)
+                    </label>
+                    <input type="password" id="shotstackApiKey" 
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        placeholder="AIzaSy..." />
+                    <a href="https://dashboard.shotstack.io/register" target="_blank" class="text-xs text-blue-600 hover:underline mt-1 inline-block">
+                        <i class="fas fa-external-link-alt mr-1"></i>Shotstack 대시보드에서 발급받기
+                    </a>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" 
+                    class="w-full px-6 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition font-bold text-lg shadow-xl">
+                    <i class="fas fa-save mr-2"></i>
+                    API 키 저장
+                </button>
+            </form>
+
+            <!-- Success Message -->
+            <div id="successMessage" class="hidden mt-4 p-4 bg-green-100 text-green-700 rounded-lg">
+                <i class="fas fa-check-circle mr-2"></i>
+                API 키가 성공적으로 저장되었습니다!
             </div>
-            <div class="bg-white rounded-xl shadow-lg p-6 text-center">
-                <div class="text-4xl font-bold text-green-600" id="totalProjects">0</div>
-                <div class="text-sm text-gray-600 mt-2">총 프로젝트</div>
-            </div>
-            <div class="bg-white rounded-xl shadow-lg p-6 text-center">
-                <div class="text-4xl font-bold text-purple-600" id="memberSince">0일</div>
-                <div class="text-sm text-gray-600 mt-2">가입 경과</div>
-            </div>
-            <div class="bg-white rounded-xl shadow-lg p-6 text-center">
-                <span class="inline-block px-4 py-2 text-sm font-bold rounded-full" id="userRoleBadge">사용자</span>
-                <div class="text-sm text-gray-600 mt-2">계정 등급</div>
+
+            <!-- Error Message -->
+            <div id="errorMessage" class="hidden mt-4 p-4 bg-red-100 text-red-700 rounded-lg">
+                <i class="fas fa-exclamation-circle mr-2"></i>
+                <span id="errorText">저장 중 오류가 발생했습니다.</span>
             </div>
         </div>
 
-        <!-- 탭 메뉴 -->
-        <div class="bg-white rounded-xl shadow-lg overflow-hidden">
-            <div class="flex border-b border-gray-200">
-                <button onclick="switchTab('subscription')" class="tab-button flex-1 py-4 px-6 font-semibold text-gray-600 hover:bg-gray-50 transition active" id="tab-subscription">
-                    <i class="fas fa-crown mr-2"></i>구독 정보
-                </button>
-                <button onclick="switchTab('payments')" class="tab-button flex-1 py-4 px-6 font-semibold text-gray-600 hover:bg-gray-50 transition" id="tab-payments">
-                    <i class="fas fa-receipt mr-2"></i>결제 내역
-                </button>
-                <button onclick="switchTab('apikeys')" class="tab-button flex-1 py-4 px-6 font-semibold text-gray-600 hover:bg-gray-50 transition" id="tab-apikeys">
-                    <i class="fas fa-key mr-2"></i>API 키 설정
-                </button>
-            </div>
+        <!-- 기본 설정 섹션 -->
+        <div class="bg-white rounded-xl shadow-lg p-8 mt-6">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">
+                <i class="fas fa-cog mr-2 text-gray-600"></i>
+                기본 설정
+            </h2>
 
-            <!-- 탭 컨텐츠 -->
-            <div class="p-8">
-                <!-- 구독 정보 탭 -->
-                <div id="content-subscription" class="tab-content">
-                    <h2 class="text-2xl font-bold text-gray-800 mb-6">
-                        <i class="fas fa-crown text-yellow-500 mr-2"></i>
-                        현재 구독 상태
-                    </h2>
-
-                    <!-- 로딩 -->
-                    <div id="subscriptionLoading" class="text-center py-16">
-                        <i class="fas fa-spinner fa-spin text-5xl text-purple-500 mb-4"></i>
-                        <p class="text-gray-600">구독 정보를 불러오는 중...</p>
-                    </div>
-
-                    <!-- 구독 없음 -->
-                    <div id="subscriptionEmpty" class="hidden text-center py-16">
-                        <i class="fas fa-times-circle text-6xl text-gray-300 mb-4"></i>
-                        <h3 class="text-xl font-bold text-gray-700 mb-2">활성화된 구독이 없습니다</h3>
-                        <p class="text-gray-500 mb-6">프리미엄 플랜을 구독하고 무제한으로 영상을 생성하세요!</p>
-                        <a href="/payment" class="inline-block px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition font-bold text-lg shadow-xl">
-                            <i class="fas fa-shopping-cart mr-2"></i>지금 구독하기
-                        </a>
-                    </div>
-
-                    <!-- 구독 정보 -->
-                    <div id="subscriptionInfo" class="hidden"></div>
+            <div class="space-y-4">
+                <!-- Background Images -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        <i class="fas fa-image mr-1 text-blue-500"></i>
+                        배경 이미지 (총 <span id="bgImageCount">0</span>개)
+                    </label>
+                    <div id="bgImageList" class="text-sm text-gray-600">로딩 중...</div>
                 </div>
 
-                <!-- 결제 내역 탭 -->
-                <div id="content-payments" class="tab-content hidden">
-                    <h2 class="text-2xl font-bold text-gray-800 mb-6">
-                        <i class="fas fa-receipt text-green-600 mr-2"></i>
-                        결제 내역
-                    </h2>
-
-                    <!-- 로딩 -->
-                    <div id="paymentHistoryLoading" class="text-center py-16">
-                        <i class="fas fa-spinner fa-spin text-5xl text-green-500 mb-4"></i>
-                        <p class="text-gray-600">결제 내역을 불러오는 중...</p>
-                    </div>
-
-                    <!-- 결제 없음 -->
-                    <div id="paymentHistoryEmpty" class="hidden text-center py-16">
-                        <i class="fas fa-inbox text-6xl text-gray-300 mb-4"></i>
-                        <h3 class="text-xl font-bold text-gray-700 mb-2">결제 내역이 없습니다</h3>
-                        <p class="text-gray-500 mb-6">첫 구독을 시작해보세요!</p>
-                        <a href="/payment" class="inline-block px-8 py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 transition font-bold text-lg shadow-xl">
-                            <i class="fas fa-shopping-cart mr-2"></i>구독 플랜 보기
-                        </a>
-                    </div>
-
-                    <!-- 결제 내역 리스트 -->
-                    <div id="paymentHistoryList" class="hidden space-y-4"></div>
-                </div>
-
-                <!-- API 키 설정 탭 -->
-                <div id="content-apikeys" class="tab-content hidden">
-                    <h2 class="text-2xl font-bold text-gray-800 mb-6">
-                        <i class="fas fa-key text-blue-600 mr-2"></i>
-                        API 키 설정
-                    </h2>
-
-                    <form id="apiKeyForm" class="space-y-6">
-                        <!-- Gemini API Key -->
-                        <div class="bg-blue-50 rounded-xl p-6 border-2 border-blue-200">
-                            <label class="flex items-center gap-2 text-lg font-bold text-gray-800 mb-3">
-                                <i class="fas fa-robot text-blue-600 text-2xl"></i>
-                                Gemini API Key
-                                <span class="text-sm font-normal text-gray-500">(스크립트 생성용)</span>
-                            </label>
-                            <div class="relative mb-2">
-                                <input type="password" id="geminiApiKey" name="geminiApiKey"
-                                    class="w-full px-4 py-3 border-2 border-blue-300 rounded-lg focus:ring-4 focus:ring-blue-200 focus:border-blue-500 text-lg"
-                                    placeholder="AIzaSy...">
-                                <button type="button" onclick="togglePassword('geminiApiKey')"
-                                    class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xl">
-                                    <i class="fas fa-eye"></i>
-                                </button>
-                            </div>
-                            <p class="text-sm text-gray-600">
-                                <a href="https://makersuite.google.com/app/apikey" target="_blank" class="text-blue-600 hover:underline font-semibold">
-                                    <i class="fas fa-external-link-alt mr-1"></i>Google AI Studio에서 발급받기
-                                </a>
-                            </p>
-                        </div>
-
-                        <!-- Gemini Model -->
-                        <div>
-                            <label class="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                                <i class="fas fa-brain text-purple-600"></i>
-                                Gemini 모델 선택
-                            </label>
-                            <select id="geminiModel" name="geminiModel"
-                                class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                <option value="gemini-2.0-flash-exp">Gemini 2.0 Flash (최신, 추천) ⭐</option>
-                                <option value="gemini-1.5-flash">Gemini 1.5 Flash (빠름, 저렴)</option>
-                                <option value="gemini-1.5-pro">Gemini 1.5 Pro (정확, 비쌈)</option>
-                                <option value="gemini-pro">Gemini Pro (기본)</option>
-                            </select>
-                        </div>
-
-                        <!-- Minimax API Key -->
-                        <div class="bg-green-50 rounded-xl p-6 border-2 border-green-200">
-                            <label class="flex items-center gap-2 text-lg font-bold text-gray-800 mb-3">
-                                <i class="fas fa-microphone text-green-600 text-2xl"></i>
-                                Minimax API Key
-                                <span class="text-sm font-normal text-gray-500">(음성 생성용)</span>
-                            </label>
-                            <div class="relative mb-2">
-                                <input type="password" id="minimaxApiKey" name="minimaxApiKey"
-                                    class="w-full px-4 py-3 border-2 border-green-300 rounded-lg focus:ring-4 focus:ring-green-200 focus:border-green-500 text-lg"
-                                    placeholder="eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...">
-                                <button type="button" onclick="togglePassword('minimaxApiKey')"
-                                    class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xl">
-                                    <i class="fas fa-eye"></i>
-                                </button>
-                            </div>
-                            <p class="text-sm text-gray-600">
-                                <a href="https://www.minimaxi.com/" target="_blank" class="text-green-600 hover:underline font-semibold">
-                                    <i class="fas fa-external-link-alt mr-1"></i>Minimax 콘솔에서 발급받기
-                                </a>
-                            </p>
-                        </div>
-
-                        <!-- Minimax Group ID -->
-                        <div>
-                            <label class="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                                <i class="fas fa-users text-green-600"></i>
-                                Minimax Group ID
-                            </label>
-                            <input type="text" id="minimaxGroupId" name="minimaxGroupId"
-                                class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                                placeholder="1234567890">
-                        </div>
-
-                        <!-- Shotstack API Key -->
-                        <div class="bg-red-50 rounded-xl p-6 border-2 border-red-200">
-                            <label class="flex items-center gap-2 text-lg font-bold text-gray-800 mb-3">
-                                <i class="fas fa-film text-red-600 text-2xl"></i>
-                                Shotstack API Key
-                                <span class="text-sm font-normal text-gray-500">(비디오 편집용)</span>
-                            </label>
-                            <div class="relative mb-2">
-                                <input type="password" id="shotstackApiKey" name="shotstackApiKey"
-                                    class="w-full px-4 py-3 border-2 border-red-300 rounded-lg focus:ring-4 focus:ring-red-200 focus:border-red-500 text-lg"
-                                    placeholder="ctDGYT...">
-                                <button type="button" onclick="togglePassword('shotstackApiKey')"
-                                    class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xl">
-                                    <i class="fas fa-eye"></i>
-                                </button>
-                            </div>
-                            <p class="text-sm text-gray-600">
-                                <a href="https://dashboard.shotstack.io/register" target="_blank" class="text-red-600 hover:underline font-semibold">
-                                    <i class="fas fa-external-link-alt mr-1"></i>Shotstack 대시보드에서 발급받기
-                                </a>
-                            </p>
-                        </div>
-
-                        <hr class="my-8 border-gray-300">
-
-                        <!-- 기본 설정 섹션 -->
-                        <div class="mb-6">
-                            <h3 class="text-xl font-bold text-gray-800 flex items-center gap-2">
-                                <i class="fas fa-palette text-purple-600 text-2xl"></i>
-                                기본 설정
-                            </h3>
-                            <p class="text-sm text-gray-600 mt-2">영상 생성에 사용할 배경음악과 배경 이미지를 관리합니다.</p>
-                        </div>
-
-                        <!-- 배경음악 관리 -->
-                        <div class="bg-purple-50 rounded-xl p-6 border-2 border-purple-200">
-                            <label class="block text-lg font-bold text-gray-800 mb-4 flex items-center justify-between">
-                                <span><i class="fas fa-music text-purple-600 mr-2"></i>배경음악 관리</span>
-                                <button type="button" onclick="document.getElementById('bgmFile').click()" 
-                                    class="px-4 py-2 text-sm bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition flex items-center gap-2 shadow-md">
-                                    <i class="fas fa-plus"></i> 음악 추가
-                                </button>
-                            </label>
-                            <input type="file" id="bgmFile" accept="audio/*,.mp3,.wav,.m4a,.ogg" 
-                                class="hidden" onchange="handleBgmUpload(event)">
-                            
-                            <div id="bgmList" class="space-y-3 max-h-80 overflow-y-auto">
-                                <div class="p-6 bg-white rounded-lg text-center text-gray-500">
-                                    <i class="fas fa-music text-4xl mb-3 text-purple-300"></i>
-                                    <p class="font-semibold">등록된 배경음악이 없습니다</p>
-                                    <p class="text-xs mt-2">위의 "음악 추가" 버튼을 클릭하여 배경음악을 업로드하세요 (최대 1.5MB)</p>
-                                </div>
-                            </div>
-                            <p class="text-xs text-gray-600 mt-3">
-                                <i class="fas fa-info-circle mr-1"></i>
-                                업로드한 배경음악은 메인 페이지에서 선택하여 사용할 수 있습니다.
-                            </p>
-                        </div>
-
-                        <!-- 배경 이미지 관리 -->
-                        <div class="bg-blue-50 rounded-xl p-6 border-2 border-blue-200 mt-6">
-                            <label class="block text-lg font-bold text-gray-800 mb-4 flex items-center justify-between">
-                                <span><i class="fas fa-image text-blue-600 mr-2"></i>배경 이미지 관리</span>
-                                <button type="button" onclick="document.getElementById('bgImageFile').click()" 
-                                    class="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center gap-2 shadow-md">
-                                    <i class="fas fa-plus"></i> 이미지 추가
-                                </button>
-                            </label>
-                            <input type="file" id="bgImageFile" accept="image/*,.jpg,.jpeg,.png,.gif,.webp" 
-                                class="hidden" onchange="handleBgImageUpload(event)">
-                            
-                            <div id="bgImageList" class="grid grid-cols-2 gap-3 max-h-80 overflow-y-auto">
-                                <div class="col-span-2 p-6 bg-white rounded-lg text-center text-gray-500">
-                                    <i class="fas fa-image text-4xl mb-3 text-blue-300"></i>
-                                    <p class="font-semibold">등록된 배경 이미지가 없습니다</p>
-                                    <p class="text-xs mt-2">위의 "이미지 추가" 버튼을 클릭하여 배경 이미지를 업로드하세요 (최대 2MB)</p>
-                                </div>
-                            </div>
-                            <p class="text-xs text-gray-600 mt-3">
-                                <i class="fas fa-info-circle mr-1"></i>
-                                업로드한 배경 이미지는 메인 페이지에서 선택하여 사용할 수 있습니다.
-                            </p>
-                        </div>
-
-                        <!-- 저장 버튼 -->
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-6 mt-8 border-t-2 border-gray-200">
-                            <button type="submit" 
-                                class="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 px-6 rounded-lg font-bold text-lg hover:from-blue-700 hover:to-purple-700 transition shadow-xl">
-                                <i class="fas fa-save mr-2"></i>API 키 저장
-                            </button>
-                            <button type="button" onclick="testApiKeys()"
-                                class="bg-green-600 text-white py-4 px-6 rounded-lg font-bold text-lg hover:bg-green-700 transition shadow-xl">
-                                <i class="fas fa-check-circle mr-2"></i>API 키 테스트
-                            </button>
-                            <button type="button" onclick="cleanupInvalidMedia()"
-                                class="bg-red-600 text-white py-4 px-6 rounded-lg font-bold text-lg hover:bg-red-700 transition shadow-xl">
-                                <i class="fas fa-trash-alt mr-2"></i>손상 파일 정리
-                            </button>
-                        </div>
-                    </form>
-
-                    <!-- 저장 성공 메시지 -->
-                    <div id="successMessage" class="hidden mt-6 p-4 bg-green-50 border-2 border-green-300 rounded-lg">
-                        <div class="flex items-center gap-3 text-green-800">
-                            <i class="fas fa-check-circle text-2xl"></i>
-                            <span class="font-bold text-lg">API 키가 성공적으로 저장되었습니다!</span>
-                        </div>
-                    </div>
-
-                    <!-- 에러 메시지 -->
-                    <div id="errorMessage" class="hidden mt-6 p-4 bg-red-50 border-2 border-red-300 rounded-lg">
-                        <div class="flex items-center gap-3 text-red-800">
-                            <i class="fas fa-exclamation-circle text-2xl"></i>
-                            <span class="font-bold text-lg" id="errorText"></span>
-                        </div>
-                    </div>
+                <!-- Background Music -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        <i class="fas fa-music mr-1 text-green-500"></i>
+                        배경 음악 (총 <span id="bgMusicCount">0</span>개)
+                    </label>
+                    <div id="bgMusicList" class="text-sm text-gray-600">로딩 중...</div>
                 </div>
             </div>
         </div>
@@ -336,827 +150,134 @@
 
     <script>
         const API_BASE = '';
-        let currentUser = null;
 
-        // 페이지 로드
-        document.addEventListener('DOMContentLoaded', async () => {
-            console.log('🚀🚀🚀 마이페이지 시작 🚀🚀🚀');
-            await checkAuth();
-            await loadUserSettings();
-            await loadBackgroundSettings();
-            
-            // 구독 정보와 결제 내역을 명시적으로 로드
-            console.log('💳 결제 내역 로드 시작...');
-            await loadPaymentHistory();
-            
-            console.log('👑 구독 정보 로드 시작...');
-            await loadSubscriptionInfo();
-            
-            console.log('✅ 모든 데이터 로드 완료');
-        });
-
-        // 탭 전환
-        function switchTab(tabName) {
-            console.log('🔄 탭 전환:', tabName);
-            
-            // 모든 탭 버튼 비활성화
-            document.querySelectorAll('.tab-button').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            
-            // 모든 탭 컨텐츠 숨기기
-            document.querySelectorAll('.tab-content').forEach(content => {
-                content.classList.add('hidden');
-            });
-            
-            // 선택한 탭 활성화
-            document.getElementById('tab-' + tabName).classList.add('active');
-            document.getElementById('content-' + tabName).classList.remove('hidden');
-        }
-
-        // 인증 확인
+        // Check authentication
         async function checkAuth() {
-            console.log('🔐 인증 확인...');
-            const authToken = localStorage.getItem('jwt_token') || localStorage.getItem('auth_token');
-            if (!authToken) {
-                console.log('❌ 토큰 없음');
+            const userInfo = localStorage.getItem('user_info');
+            if (!userInfo) {
+                alert('로그인이 필요합니다.');
                 window.location.href = '/login.html';
-                return;
+                return null;
             }
 
-            try {
-                // Get user info from localStorage (saved during login)
-                const userInfoStr = localStorage.getItem('user_info');
-                
-                if (!userInfoStr) {
-                    throw new Error('사용자 정보 없음');
-                }
-                
-                const user = JSON.parse(userInfoStr);
-                console.log('✅ 사용자 데이터:', user);
-                
-                currentUser = user;
-                displayUserInfo(currentUser);
-                await loadUserStats();
-                
-            } catch (error) {
-                console.error('❌ 인증 에러:', error);
-                localStorage.removeItem('jwt_token'); 
-                localStorage.removeItem('auth_token');
-                localStorage.removeItem('user_info');
-                window.location.href = '/login.html';
-            }
+            const user = JSON.parse(userInfo);
+            document.getElementById('userName').textContent = user.name || 'User';
+            document.getElementById('userEmail').textContent = user.email || '';
+            
+            console.log('✅ User authenticated:', user.email);
+            return user;
         }
 
-        // 사용자 정보 표시
-        function displayUserInfo(user) {
-            console.log('👤 사용자 정보 표시');
-            document.getElementById('userName').textContent = user.name;
-            document.getElementById('userEmail').textContent = user.email;
-            document.getElementById('userAvatar').src = user.picture || 'https://via.placeholder.com/40';
-
-            const roleBadge = document.getElementById('userRoleBadge');
-            const roleMap = {
-                'super_admin': { text: '최고 관리자', color: 'bg-red-500 text-white' },
-                'admin': { text: '관리자', color: 'bg-purple-500 text-white' },
-                'user': { text: '일반 사용자', color: 'bg-blue-500 text-white' }
-            };
-            const roleInfo = roleMap[user.role] || roleMap['user'];
-            roleBadge.textContent = roleInfo.text;
-            roleBadge.className = `inline-block px-4 py-2 text-sm font-bold rounded-full ${roleInfo.color}`;
-
-            const joinDate = new Date(user.created_at);
-            const daysSince = Math.floor((Date.now() - joinDate.getTime()) / (1000 * 60 * 60 * 24));
-            document.getElementById('memberSince').textContent = `${daysSince}일`;
+        // Logout
+        function logout() {
+            localStorage.clear();
+            window.location.href = '/';
         }
 
-        // 사용자 통계
-        async function loadUserStats() {
-            console.log('📊 통계 로드');
+        // Load API keys
+        async function loadApiKeys() {
+            const userInfo = JSON.parse(localStorage.getItem('user_info') || '{}');
+            const userId = userInfo.id || 'admin_001';
             const authToken = localStorage.getItem('jwt_token') || localStorage.getItem('auth_token');
+
             try {
-                const response = await fetch(`${API_BASE}/api/users/me/stats`, {
+                const response = await fetch(`${API_BASE}/api/settings/${userId}`, {
                     headers: { 'Authorization': `Bearer ${authToken}` }
                 });
 
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.success) {
-                        document.getElementById('totalVideos').textContent = data.data.total_video_requests || 0;
-                        document.getElementById('totalProjects').textContent = data.data.total_projects || 0;
-                    }
-                }
-            } catch (error) {
-                console.error('❌ 통계 로드 실패:', error);
-            }
-        }
-
-        // 결제 내역 로드
-        async function loadPaymentHistory() {
-            console.log('💳💳💳 결제 내역 로드 함수 시작');
-            const authToken = localStorage.getItem('jwt_token') || localStorage.getItem('auth_token');
-            if (!authToken) {
-                console.log('❌ 토큰 없음');
-                return;
-            }
-
-            const loadingEl = document.getElementById('paymentHistoryLoading');
-            const emptyEl = document.getElementById('paymentHistoryEmpty');
-            const listEl = document.getElementById('paymentHistoryList');
-
-            try {
-                console.log('📡 API 호출: /api/user/payments');
-                const response = await fetch(`${API_BASE}/api/user/payments`, {
-                    headers: { 'Authorization': `Bearer ${authToken}` }
-                });
-
-                console.log('📡 응답 상태:', response.status);
-                const data = await response.json();
-                console.log('📦 응답 데이터:', JSON.stringify(data, null, 2));
-                
-                loadingEl.classList.add('hidden');
-                
-                if (data.success && data.data && data.data.length > 0) {
-                    console.log(`✅✅✅ ${data.data.length}개의 결제 내역 발견!`);
-                    emptyEl.classList.add('hidden');
-                    displayPaymentHistory(data.data);
-                } else {
-                    console.log('ℹ️ 결제 내역 없음');
-                    emptyEl.classList.remove('hidden');
-                    listEl.classList.add('hidden');
-                }
-            } catch (error) {
-                console.error('❌❌❌ 결제 내역 로드 에러:', error);
-                loadingEl.classList.add('hidden');
-                emptyEl.classList.remove('hidden');
-            }
-        }
-
-        // 결제 내역 표시
-        function displayPaymentHistory(payments) {
-            console.log('🎨 결제 내역 표시:', payments.length);
-            const listEl = document.getElementById('paymentHistoryList');
-            listEl.classList.remove('hidden');
-            
-            const statusColors = {
-                'pending': 'bg-yellow-100 text-yellow-800 border-yellow-300',
-                'confirmed': 'bg-green-100 text-green-800 border-green-300',
-                'failed': 'bg-red-100 text-red-800 border-red-300',
-                'rejected': 'bg-red-100 text-red-800 border-red-300'
-            };
-            
-            const statusTexts = {
-                'pending': '대기중',
-                'confirmed': '완료',
-                'failed': '실패',
-                'rejected': '거부됨'
-            };
-            
-            const methodTexts = {
-                'bank_transfer': '무통장 입금',
-                'payapp': '간편결제'
-            };
-            
-            const planTexts = {
-                'test': '테스트 플랜 (1일)',
-                'monthly': '월간 플랜 (30일)',
-                'yearly': '연간 플랜 (365일)'
-            };
-            
-            listEl.innerHTML = payments.map(payment => {
-                const date = new Date(payment.created_at);
-                const dateStr = date.toLocaleDateString('ko-KR');
-                const timeStr = date.toLocaleTimeString('ko-KR');
-                
-                return `
-                    <div class="bg-white border-2 border-gray-200 rounded-xl p-6 hover:shadow-xl transition">
-                        <div class="flex justify-between items-start mb-4">
-                            <div class="flex-1">
-                                <h4 class="text-2xl font-bold text-gray-800 mb-2">${payment.amount.toLocaleString()}원</h4>
-                                <p class="text-gray-600 mb-1">
-                                    <i class="fas fa-credit-card mr-2"></i>${methodTexts[payment.payment_method] || payment.payment_method}
-                                </p>
-                                ${payment.plan_name ? `
-                                    <p class="text-purple-600 font-semibold">
-                                        <i class="fas fa-crown mr-2"></i>${planTexts[payment.plan_name] || payment.plan_name}
-                                    </p>
-                                ` : ''}
-                            </div>
-                            <span class="px-4 py-2 rounded-full text-sm font-bold border-2 ${statusColors[payment.status]}">
-                                ${statusTexts[payment.status]}
-                            </span>
-                        </div>
-                        <div class="text-sm text-gray-500 flex items-center gap-4">
-                            <span><i class="fas fa-calendar mr-2"></i>${dateStr}</span>
-                            <span><i class="fas fa-clock mr-2"></i>${timeStr}</span>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        // 구독 정보 로드
-        async function loadSubscriptionInfo() {
-            console.log('👑👑👑 구독 정보 로드 함수 시작');
-            const authToken = localStorage.getItem('jwt_token') || localStorage.getItem('auth_token');
-            if (!authToken) {
-                console.log('❌ 토큰 없음');
-                return;
-            }
-
-            const loadingEl = document.getElementById('subscriptionLoading');
-            const emptyEl = document.getElementById('subscriptionEmpty');
-            const infoEl = document.getElementById('subscriptionInfo');
-
-            try {
-                console.log('📡 API 호출: /api/user/subscription');
-                const response = await fetch(`${API_BASE}/api/user/subscription`, {
-                    headers: { 'Authorization': `Bearer ${authToken}` }
-                });
-
-                console.log('📡 응답 상태:', response.status);
-                const data = await response.json();
-                console.log('📦 응답 데이터:', JSON.stringify(data, null, 2));
-                
-                loadingEl.classList.add('hidden');
-                
-                if (data.success && data.data) {
-                    console.log('✅✅✅ 활성 구독 발견:', data.data.plan_name);
-                    emptyEl.classList.add('hidden');
-                    displaySubscriptionInfo(data.data);
-                } else {
-                    console.log('ℹ️ 활성 구독 없음');
-                    emptyEl.classList.remove('hidden');
-                    infoEl.classList.add('hidden');
-                }
-            } catch (error) {
-                console.error('❌❌❌ 구독 정보 로드 에러:', error);
-                loadingEl.classList.add('hidden');
-                emptyEl.classList.remove('hidden');
-            }
-        }
-
-        // 구독 정보 표시
-        function displaySubscriptionInfo(subscription) {
-            console.log('🎨 구독 정보 표시');
-            const infoEl = document.getElementById('subscriptionInfo');
-            infoEl.classList.remove('hidden');
-            
-            const startDate = new Date(subscription.start_date);
-            const endDate = new Date(subscription.end_date);
-            const now = new Date();
-            const daysLeft = Math.ceil((endDate - now) / (1000 * 60 * 60 * 24));
-            
-            const planTexts = {
-                'test': '테스트 플랜',
-                'monthly': '월간 플랜',
-                'yearly': '연간 플랜'
-            };
-            
-            infoEl.innerHTML = `
-                <div class="bg-gradient-to-br from-purple-100 to-pink-100 border-4 border-purple-400 rounded-2xl p-8 shadow-2xl">
-                    <div class="flex items-center gap-4 mb-6">
-                        <div class="bg-green-500 rounded-full p-4">
-                            <i class="fas fa-check-circle text-5xl text-white"></i>
-                        </div>
-                        <div>
-                            <h3 class="text-3xl font-bold text-gray-800">${planTexts[subscription.plan_name] || subscription.plan_name}</h3>
-                            <p class="text-xl text-purple-700 font-semibold">활성 구독 중</p>
-                        </div>
-                    </div>
-                    
-                    <div class="grid grid-cols-2 gap-6">
-                        <div class="bg-white rounded-xl p-4 shadow-md">
-                            <p class="text-gray-600 text-sm mb-1">결제 금액</p>
-                            <p class="font-bold text-2xl text-gray-800">${subscription.price.toLocaleString()}원</p>
-                        </div>
-                        <div class="bg-white rounded-xl p-4 shadow-md">
-                            <p class="text-gray-600 text-sm mb-1">남은 기간</p>
-                            <p class="font-bold text-2xl ${daysLeft <= 7 ? 'text-red-600' : 'text-green-600'}">${daysLeft}일</p>
-                        </div>
-                        <div class="bg-white rounded-xl p-4 shadow-md">
-                            <p class="text-gray-600 text-sm mb-1">시작일</p>
-                            <p class="font-semibold text-lg text-gray-800">${startDate.toLocaleDateString('ko-KR')}</p>
-                        </div>
-                        <div class="bg-white rounded-xl p-4 shadow-md">
-                            <p class="text-gray-600 text-sm mb-1">만료일</p>
-                            <p class="font-semibold text-lg text-gray-800">${endDate.toLocaleDateString('ko-KR')}</p>
-                        </div>
-                    </div>
-                    
-                    <div class="mt-6 text-center">
-                        <a href="/payment" class="inline-block px-8 py-3 bg-gradient-to-r from-yellow-500 to-orange-600 text-white rounded-lg hover:from-yellow-600 hover:to-orange-700 transition font-bold text-lg shadow-xl">
-                            <i class="fas fa-crown mr-2"></i>플랜 변경하기
-                        </a>
-                    </div>
-                </div>
-            `;
-        }
-
-        // 사용자 설정 로드
-        async function loadUserSettings() {
-            if (!currentUser) return;
-            try {
-                const response = await fetch(`${API_BASE}/api/settings/${currentUser.id}`);
                 if (response.ok) {
                     const data = await response.json();
                     if (data.success && data.data) {
-                        const settings = data.data;
-                        document.getElementById('geminiApiKey').value = settings.gemini_api_key || '';
-                        document.getElementById('geminiModel').value = settings.gemini_model || 'gemini-2.0-flash-exp';
-                        document.getElementById('minimaxApiKey').value = settings.minimax_api_key || '';
-                        document.getElementById('minimaxGroupId').value = settings.minimax_group_id || '';
-                        document.getElementById('shotstackApiKey').value = settings.shotstack_api_key || '';
+                        // Populate form
+                        document.getElementById('geminiApiKey').value = data.data.gemini_api_key || '';
+                        document.getElementById('minimaxApiKey').value = data.data.minimax_api_key || '';
+                        document.getElementById('minimaxGroupId').value = data.data.minimax_group_id || '';
+                        document.getElementById('shotstackApiKey').value = data.data.shotstack_api_key || '';
+
+                        // Display background images/music
+                        const bgImages = data.data.background_images || [];
+                        const bgMusic = data.data.background_music || [];
+
+                        document.getElementById('bgImageCount').textContent = bgImages.length;
+                        document.getElementById('bgMusicCount').textContent = bgMusic.length;
+
+                        if (bgImages.length > 0) {
+                            document.getElementById('bgImageList').innerHTML = bgImages.map(img => 
+                                `<div class="text-xs text-gray-600">• ${img.name}</div>`
+                            ).join('');
+                        } else {
+                            document.getElementById('bgImageList').textContent = '등록된 이미지가 없습니다.';
+                        }
+
+                        if (bgMusic.length > 0) {
+                            document.getElementById('bgMusicList').innerHTML = bgMusic.map(music => 
+                                `<div class="text-xs text-gray-600">• ${music.name}</div>`
+                            ).join('');
+                        } else {
+                            document.getElementById('bgMusicList').textContent = '등록된 음악이 없습니다.';
+                        }
+
+                        console.log('✅ API keys loaded successfully');
                     }
                 }
             } catch (error) {
-                console.error('Settings load error:', error);
+                console.error('❌ Failed to load API keys:', error);
             }
         }
 
-        // API 키 저장
-        document.getElementById('apiKeyForm').addEventListener('submit', async (e) => {
+        // Save API keys
+        document.getElementById('apiKeysForm').addEventListener('submit', async (e) => {
             e.preventDefault();
 
-            const formData = {
-                userId: currentUser.id,
-                geminiApiKey: document.getElementById('geminiApiKey').value.trim(),
-                geminiModel: document.getElementById('geminiModel').value,
-                minimaxApiKey: document.getElementById('minimaxApiKey').value.trim(),
-                minimaxGroupId: document.getElementById('minimaxGroupId').value.trim(),
-                shotstackApiKey: document.getElementById('shotstackApiKey').value.trim()
+            const userInfo = JSON.parse(localStorage.getItem('user_info') || '{}');
+            const userId = userInfo.id || 'admin_001';
+            const authToken = localStorage.getItem('jwt_token') || localStorage.getItem('auth_token');
+
+            const data = {
+                gemini_api_key: document.getElementById('geminiApiKey').value,
+                minimax_api_key: document.getElementById('minimaxApiKey').value,
+                minimax_group_id: document.getElementById('minimaxGroupId').value,
+                shotstack_api_key: document.getElementById('shotstackApiKey').value
             };
 
             try {
-                const response = await fetch(`${API_BASE}/api/settings/${currentUser.id}`, {
+                const response = await fetch(`${API_BASE}/api/settings/${userId}`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        gemini_api_key: formData.geminiApiKey,
-                        minimax_api_key: formData.minimaxApiKey,
-                        minimax_group_id: formData.minimaxGroupId,
-                        shotstack_api_key: formData.shotstackApiKey
-                    })
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify(data)
                 });
 
-                const data = await response.json();
+                const result = await response.json();
 
-                if (data.success) {
-                    showSuccessMessage();
+                if (result.success) {
+                    document.getElementById('successMessage').classList.remove('hidden');
+                    document.getElementById('errorMessage').classList.add('hidden');
+                    console.log('✅ API keys saved successfully');
+
+                    // Hide success message after 3 seconds
+                    setTimeout(() => {
+                        document.getElementById('successMessage').classList.add('hidden');
+                    }, 3000);
                 } else {
-                    showErrorMessage(data.error || '저장 실패');
+                    throw new Error(result.error || 'Failed to save');
                 }
             } catch (error) {
-                console.error('Save error:', error);
-                showErrorMessage('저장 중 오류가 발생했습니다.');
+                console.error('❌ Failed to save API keys:', error);
+                document.getElementById('errorText').textContent = error.message || '저장 중 오류가 발생했습니다.';
+                document.getElementById('errorMessage').classList.remove('hidden');
+                document.getElementById('successMessage').classList.add('hidden');
             }
         });
 
-        // 비밀번호 토글
-        function togglePassword(fieldId) {
-            const field = document.getElementById(fieldId);
-            const icon = field.nextElementSibling.querySelector('i');
-            
-            if (field.type === 'password') {
-                field.type = 'text';
-                icon.classList.remove('fa-eye');
-                icon.classList.add('fa-eye-slash');
-            } else {
-                field.type = 'password';
-                icon.classList.remove('fa-eye-slash');
-                icon.classList.add('fa-eye');
-            }
-        }
-
-        // API 키 테스트
-        async function testApiKeys() {
-            alert('API 키 테스트 기능은 준비 중입니다.');
-        }
-
-        // 성공 메시지
-        function showSuccessMessage() {
-            document.getElementById('successMessage').classList.remove('hidden');
-            document.getElementById('errorMessage').classList.add('hidden');
-            setTimeout(() => {
-                document.getElementById('successMessage').classList.add('hidden');
-            }, 3000);
-        }
-
-        // 에러 메시지
-        function showErrorMessage(message) {
-            document.getElementById('errorText').textContent = message;
-            document.getElementById('errorMessage').classList.remove('hidden');
-            document.getElementById('successMessage').classList.add('hidden');
-        }
-
-        // 로그아웃
-        async function logout() {
-            const authToken = localStorage.getItem('jwt_token') || localStorage.getItem('auth_token');
-            try {
-                await fetch(`${API_BASE}/api/auth/logout`, {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${authToken}` }
-                });
-            } catch (error) {
-                console.error('Logout error:', error);
-            }
-            localStorage.removeItem('jwt_token'); localStorage.removeItem('auth_token');
-            window.location.href = '/login.html';
-        }
-
-        // 배경 설정 로드
-        async function loadBackgroundSettings() {
-            if (!currentUser) return;
-            
-            console.log('🎵 배경 설정 로드 시작');
-            const authToken = localStorage.getItem('jwt_token') || localStorage.getItem('auth_token');
-            
-            try {
-                // 배경음악 로드 (쿼리 파라미터 사용)
-                const bgmResponse = await fetch(`${API_BASE}/api/background-music?userId=${currentUser.id}`, {
-                    headers: { 'Authorization': `Bearer ${authToken}` }
-                });
-                
-                if (bgmResponse.ok) {
-                    const bgmData = await bgmResponse.json();
-                    console.log('✅ 배경음악 데이터:', bgmData);
-                    if (bgmData.success && bgmData.data) {
-                        displayBgmList(bgmData.data);
-                    }
-                } else {
-                    console.error('❌ 배경음악 로드 실패:', bgmResponse.status);
-                }
-                
-                // 배경 이미지 로드 (쿼리 파라미터 사용)
-                const bgImageResponse = await fetch(`${API_BASE}/api/background-images?userId=${currentUser.id}`, {
-                    headers: { 'Authorization': `Bearer ${authToken}` }
-                });
-                
-                if (bgImageResponse.ok) {
-                    const bgImageData = await bgImageResponse.json();
-                    console.log('✅ 배경 이미지 데이터:', bgImageData);
-                    if (bgImageData.success && bgImageData.data) {
-                        displayBgImageList(bgImageData.data);
-                    }
-                } else {
-                    console.error('❌ 배경 이미지 로드 실패:', bgImageResponse.status);
-                }
-            } catch (error) {
-                console.error('❌ 배경 설정 로드 에러:', error);
-            }
-        }
-
-        // 배경음악 리스트 표시
-        function displayBgmList(bgms) {
-            const listEl = document.getElementById('bgmList');
-            
-            // 업로드된 항목 추가
-            const uploadedBgms = JSON.parse(sessionStorage.getItem('uploadedBgms') || '[]');
-            const allBgms = [...uploadedBgms, ...bgms];
-            
-            // 삭제된 항목 필터링
-            const deletedBgms = JSON.parse(sessionStorage.getItem('deletedBgms') || '[]');
-            const filteredBgms = allBgms.filter(bgm => !deletedBgms.includes(bgm.id));
-            
-            if (!filteredBgms || filteredBgms.length === 0) {
-                listEl.innerHTML = `
-                    <div class="p-6 bg-white rounded-lg text-center text-gray-500">
-                        <i class="fas fa-music text-4xl mb-3 text-purple-300"></i>
-                        <p class="font-semibold">등록된 배경음악이 없습니다</p>
-                        <p class="text-xs mt-2">위의 "음악 추가" 버튼을 클릭하여 배경음악을 업로드하세요</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            listEl.innerHTML = filteredBgms.map(bgm => `
-                <div class="flex items-center justify-between p-4 bg-white rounded-lg border border-purple-200 hover:shadow-md transition">
-                    <div class="flex items-center gap-3 flex-1">
-                        <i class="fas fa-music text-2xl text-purple-600"></i>
-                        <div class="flex-1">
-                            <p class="font-semibold text-gray-800">${bgm.name}</p>
-                            <p class="text-xs text-gray-500">
-                                ${new Date(bgm.created_at).toLocaleDateString('ko-KR')}
-                            </p>
-                        </div>
-                    </div>
-                    <button type="button" onclick="deleteBgm('${bgm.id}')" 
-                        class="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition text-sm">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-            `).join('');
-        }
-
-        // 배경 이미지 리스트 표시
-        function displayBgImageList(images) {
-            const listEl = document.getElementById('bgImageList');
-            
-            // 업로드된 항목 추가
-            const uploadedImages = JSON.parse(sessionStorage.getItem('uploadedBgImages') || '[]');
-            const allImages = [...uploadedImages, ...images];
-            
-            // 삭제된 항목 필터링
-            const deletedImages = JSON.parse(sessionStorage.getItem('deletedBgImages') || '[]');
-            const filteredImages = allImages.filter(img => !deletedImages.includes(img.id));
-            
-            if (!filteredImages || filteredImages.length === 0) {
-                listEl.innerHTML = `
-                    <div class="col-span-2 p-6 bg-white rounded-lg text-center text-gray-500">
-                        <i class="fas fa-image text-4xl mb-3 text-blue-300"></i>
-                        <p class="font-semibold">등록된 배경 이미지가 없습니다</p>
-                        <p class="text-xs mt-2">위의 "이미지 추가" 버튼을 클릭하여 배경 이미지를 업로드하세요</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            listEl.innerHTML = filteredImages.map(img => `
-                <div class="relative group">
-                    <img src="${img.data_url}" alt="${img.name}" 
-                        class="w-full h-32 object-cover rounded-lg border-2 border-blue-200">
-                    <div class="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center rounded-lg">
-                        <button type="button" onclick="deleteBgImage('${img.id}')" 
-                            class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition">
-                            <i class="fas fa-trash mr-1"></i>삭제
-                        </button>
-                    </div>
-                    <p class="text-xs text-gray-600 mt-1 truncate">${img.name}</p>
-                </div>
-            `).join('');
-        }
-
-        // 배경음악 업로드
-        async function handleBgmUpload(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            if (!file.type.startsWith('audio/')) {
-                alert('오디오 파일만 업로드 가능합니다.');
-                event.target.value = '';
-                return;
-            }
-
-            if (file.size > 1.5 * 1024 * 1024) {
-                alert('배경음악 파일은 최대 1.5MB까지 업로드 가능합니다.');
-                event.target.value = '';
-                return;
-            }
-
-            console.log('📤 배경음악 업로드:', file.name);
-
-            const reader = new FileReader();
-            reader.onload = async function(e) {
-                try {
-                    const dataUrl = e.target.result;
-                    const authToken = localStorage.getItem('jwt_token') || localStorage.getItem('auth_token');
-                    
-                    const response = await fetch(`${API_BASE}/api/background-music/upload`, {
-                        method: 'POST',
-                        headers: { 
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${authToken}`
-                        },
-                        body: JSON.stringify({
-                            name: file.name,
-                            dataUrl: dataUrl,
-                            duration: 0,
-                            userId: currentUser.id
-                        })
-                    });
-
-                    const data = await response.json();
-                    if (data.success) {
-                        console.log('✅ 배경음악 업로드 성공:', data.data);
-                        
-                        // 업로드된 항목을 sessionStorage에 저장
-                        const uploadedBgms = JSON.parse(sessionStorage.getItem('uploadedBgms') || '[]');
-                        uploadedBgms.unshift(data.data); // 맨 앞에 추가
-                        sessionStorage.setItem('uploadedBgms', JSON.stringify(uploadedBgms));
-                        
-                        await loadBackgroundSettings();
-                        event.target.value = '';
-                        alert('✅ 배경음악이 성공적으로 업로드되었습니다!');
-                    } else {
-                        throw new Error(data.error || '업로드 실패');
-                    }
-                } catch (error) {
-                    console.error('❌ 배경음악 업로드 에러:', error);
-                    alert('❌ 배경음악 업로드 중 오류가 발생했습니다: ' + error.message);
-                    event.target.value = '';
-                }
-            };
-            
-            reader.onerror = function() {
-                alert('❌ 파일 읽기 중 오류가 발생했습니다.');
-                event.target.value = '';
-            };
-            
-            reader.readAsDataURL(file);
-        }
-
-        // 배경 이미지 업로드
-        async function handleBgImageUpload(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            if (!file.type.startsWith('image/')) {
-                alert('이미지 파일만 업로드 가능합니다.');
-                event.target.value = '';
-                return;
-            }
-
-            if (file.size > 2 * 1024 * 1024) {
-                alert('배경 이미지는 최대 2MB까지 업로드 가능합니다.');
-                event.target.value = '';
-                return;
-            }
-
-            console.log('📤 배경 이미지 업로드:', file.name);
-
-            const reader = new FileReader();
-            reader.onload = async function(e) {
-                try {
-                    const dataUrl = e.target.result;
-                    const authToken = localStorage.getItem('jwt_token') || localStorage.getItem('auth_token');
-                    
-                    const response = await fetch(`${API_BASE}/api/background-images/upload`, {
-                        method: 'POST',
-                        headers: { 
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${authToken}`
-                        },
-                        body: JSON.stringify({
-                            name: file.name,
-                            dataUrl: dataUrl,
-                            userId: currentUser.id
-                        })
-                    });
-
-                    const data = await response.json();
-                    if (data.success) {
-                        console.log('✅ 배경 이미지 업로드 성공:', data.data);
-                        
-                        // 업로드된 항목을 sessionStorage에 저장
-                        const uploadedImages = JSON.parse(sessionStorage.getItem('uploadedBgImages') || '[]');
-                        uploadedImages.unshift(data.data); // 맨 앞에 추가
-                        sessionStorage.setItem('uploadedBgImages', JSON.stringify(uploadedImages));
-                        
-                        await loadBackgroundSettings();
-                        event.target.value = '';
-                        alert('✅ 배경 이미지가 성공적으로 업로드되었습니다!');
-                    } else {
-                        throw new Error(data.error || '업로드 실패');
-                    }
-                } catch (error) {
-                    console.error('❌ 배경 이미지 업로드 에러:', error);
-                    alert('❌ 배경 이미지 업로드 중 오류가 발생했습니다: ' + error.message);
-                    event.target.value = '';
-                }
-            };
-            
-            reader.onerror = function() {
-                alert('❌ 파일 읽기 중 오류가 발생했습니다.');
-                event.target.value = '';
-            };
-            
-            reader.readAsDataURL(file);
-        }
-
-        // 배경음악 삭제
-        async function deleteBgm(id) {
-            if (!confirm('이 배경음악을 삭제하시겠습니까?')) return;
-
-            try {
-                const authToken = localStorage.getItem('jwt_token') || localStorage.getItem('auth_token');
-                const response = await fetch(`${API_BASE}/api/background-music/${id}`, {
-                    method: 'DELETE',
-                    headers: { 'Authorization': `Bearer ${authToken}` }
-                });
-
-                const data = await response.json();
-                if (data.success) {
-                    console.log('✅ 배경음악 삭제 성공');
-                    
-                    // 삭제된 ID를 sessionStorage에 저장
-                    const deletedBgms = JSON.parse(sessionStorage.getItem('deletedBgms') || '[]');
-                    deletedBgms.push(id);
-                    sessionStorage.setItem('deletedBgms', JSON.stringify(deletedBgms));
-                    
-                    await loadBackgroundSettings();
-                    alert('✅ 배경음악이 삭제되었습니다.');
-                } else {
-                    throw new Error(data.error || '삭제 실패');
-                }
-            } catch (error) {
-                console.error('❌ 배경음악 삭제 에러:', error);
-                alert('❌ 배경음악 삭제 중 오류가 발생했습니다: ' + error.message);
-            }
-        }
-
-        // 배경 이미지 삭제
-        async function deleteBgImage(id) {
-            if (!confirm('이 배경 이미지를 삭제하시겠습니까?')) return;
-
-            try {
-                const authToken = localStorage.getItem('jwt_token') || localStorage.getItem('auth_token');
-                const response = await fetch(`${API_BASE}/api/background-images/${id}`, {
-                    method: 'DELETE',
-                    headers: { 'Authorization': `Bearer ${authToken}` }
-                });
-
-                const data = await response.json();
-                if (data.success) {
-                    console.log('✅ 배경 이미지 삭제 성공');
-                    
-                    // 삭제된 ID를 sessionStorage에 저장
-                    const deletedImages = JSON.parse(sessionStorage.getItem('deletedBgImages') || '[]');
-                    deletedImages.push(id);
-                    sessionStorage.setItem('deletedBgImages', JSON.stringify(deletedImages));
-                    
-                    await loadBackgroundSettings();
-                    alert('✅ 배경 이미지가 삭제되었습니다.');
-                } else {
-                    throw new Error(data.error || '삭제 실패');
-                }
-            } catch (error) {
-                console.error('❌ 배경 이미지 삭제 에러:', error);
-                alert('❌ 배경 이미지 삭제 중 오류가 발생했습니다: ' + error.message);
-            }
-        }
-
-        // 손상된 미디어 파일 정리
-        async function cleanupInvalidMedia() {
-            if (!confirm('모든 배경음악과 이미지 파일을 확인하고 손상된 파일을 정리하시겠습니까?\n\n유효하지 않은 dataUrl을 가진 파일이 삭제됩니다.')) {
-                return;
-            }
-
-            try {
-                const authToken = localStorage.getItem('jwt_token') || localStorage.getItem('auth_token');
-                let deletedCount = 0;
-                
-                // 배경음악 확인 및 정리
-                const bgmResponse = await fetch(`${API_BASE}/api/background-music?userId=${currentUser.id}`, {
-                    headers: { 'Authorization': `Bearer ${authToken}` }
-                });
-                
-                if (bgmResponse.ok) {
-                    const bgmData = await bgmResponse.json();
-                    if (bgmData.success && bgmData.data) {
-                        for (const bgm of bgmData.data) {
-                            // dataUrl이 없거나 유효하지 않으면 삭제
-                            if (!bgm.dataUrl || !bgm.dataUrl.startsWith('data:audio/')) {
-                                try {
-                                    const delResponse = await fetch(`${API_BASE}/api/background-music/${bgm.id}`, {
-                                        method: 'DELETE',
-                                        headers: { 'Authorization': `Bearer ${authToken}` }
-                                    });
-                                    if (delResponse.ok) deletedCount++;
-                                } catch (err) {
-                                    console.error('배경음악 삭제 실패:', bgm.id);
-                                }
-                            }
-                        }
-                    }
-                }
-                
-                // 배경 이미지 확인 및 정리
-                const imgResponse = await fetch(`${API_BASE}/api/background-images?userId=${currentUser.id}`, {
-                    headers: { 'Authorization': `Bearer ${authToken}` }
-                });
-                
-                if (imgResponse.ok) {
-                    const imgData = await imgResponse.json();
-                    if (imgData.success && imgData.data) {
-                        for (const img of imgData.data) {
-                            // dataUrl이 없거나 유효하지 않으면 삭제
-                            if (!img.dataUrl || !img.dataUrl.startsWith('data:image/')) {
-                                try {
-                                    const delResponse = await fetch(`${API_BASE}/api/background-images/${img.id}`, {
-                                        method: 'DELETE',
-                                        headers: { 'Authorization': `Bearer ${authToken}` }
-                                    });
-                                    if (delResponse.ok) deletedCount++;
-                                } catch (err) {
-                                    console.error('배경 이미지 삭제 실패:', img.id);
-                                }
-                            }
-                        }
-                    }
-                }
-                
-                await loadBackgroundSettings();
-                
-                if (deletedCount > 0) {
-                    alert(`✅ 정리 완료!\n\n삭제된 손상 파일: ${deletedCount}개`);
-                } else {
-                    alert('ℹ️ 모든 파일이 정상입니다. 손상된 파일이 없습니다.');
-                }
-            } catch (error) {
-                console.error('❌ 파일 정리 에러:', error);
-                alert('❌ 파일 정리 중 오류가 발생했습니다:\n' + error.message);
-            }
-        }
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('🚀 Initializing mypage...');
+            await checkAuth();
+            await loadApiKeys();
+        });
     </script>
 </body>
 </html>
