@@ -803,34 +803,28 @@ async function loadUserBackgrounds() {
     const token = localStorage.getItem('jwt_token') || localStorage.getItem('auth_token');
     
     try {
-        // Load background images
-        const imagesResponse = await fetch(`${API_BASE}/api/background-images?userId=${userId}`, {
+        // Load from Settings API (includes background images and music)
+        const settingsResponse = await fetch(`${API_BASE}/api/settings/${userId}`, {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
         });
         
-        if (imagesResponse.ok) {
-            const imagesData = await imagesResponse.json();
-            // API returns {success, data, total}
-            userBackgroundImages = imagesData.data || imagesData.images || [];
-            console.log('✅ Loaded background images:', userBackgroundImages.length);
-            populateBgImageSelect();
-        }
-        
-        // Load background music
-        const musicResponse = await fetch(`${API_BASE}/api/background-music?userId=${userId}`, {
-            headers: {
-                'Authorization': `Bearer ${token}`
+        if (settingsResponse.ok) {
+            const settingsData = await settingsResponse.json();
+            if (settingsData.success && settingsData.data) {
+                // Extract background images
+                userBackgroundImages = settingsData.data.background_images || [];
+                console.log('✅ Loaded background images:', userBackgroundImages.length);
+                populateBgImageSelect();
+                
+                // Extract background music
+                userBackgroundMusic = settingsData.data.background_music || [];
+                console.log('✅ Loaded background music:', userBackgroundMusic.length);
+                populateBgMusicSelect();
             }
-        });
-        
-        if (musicResponse.ok) {
-            const musicData = await musicResponse.json();
-            // API returns {success, data, total}
-            userBackgroundMusic = musicData.data || musicData.music || [];
-            console.log('✅ Loaded background music:', userBackgroundMusic.length);
-            populateBgMusicSelect();
+        } else {
+            console.error('❌ Failed to load settings:', settingsResponse.status);
         }
     } catch (error) {
         console.error('❌ Error loading backgrounds:', error);
