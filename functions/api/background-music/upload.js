@@ -1,19 +1,12 @@
 // Background Music Upload API - POST endpoint
 // Handles background music file uploads
 
-// Only import fs/path in Node.js environment
-let fs, path, fileURLToPath, __dirname;
-if (typeof process !== 'undefined' && process.versions && process.versions.node) {
-  // Running in Node.js (Express server)
-  const fsModule = await import('fs');
-  const pathModule = await import('path');
-  const urlModule = await import('url');
-  fs = fsModule.default;
-  path = pathModule.default;
-  fileURLToPath = urlModule.fileURLToPath;
-  const __filename = fileURLToPath(import.meta.url);
-  __dirname = path.dirname(__filename);
-}
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export async function onRequestPost(context) {
   try {
@@ -78,20 +71,6 @@ export async function onRequestPost(context) {
         message: '음악 파일은 5MB 이하만 업로드할 수 있습니다.'
       }), {
         status: 400,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*'
-        }
-      });
-    }
-    
-    // Check if we're in Node.js environment (Express server)
-    if (!fs || !path || !__dirname) {
-      return new Response(JSON.stringify({
-        success: false,
-        message: 'File upload is only available on the server environment'
-      }), {
-        status: 503,
         headers: {
           'Content-Type': 'application/json',
           'Access-Control-Allow-Origin': '*'
