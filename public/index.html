@@ -162,13 +162,20 @@
                                         <select id="bgImageSelect" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mb-2">
                                             <option value="">선택 안함 (기본 이미지 사용)</option>
                                         </select>
-                                        <!-- 이미지 업로드 버튼 -->
-                                        <input type="file" id="bgImageUpload" accept="image/*" class="hidden" onchange="handleBgImageUpload(event)">
-                                        <button onclick="document.getElementById('bgImageUpload').click()" 
-                                            class="w-full px-3 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition flex items-center justify-center gap-2 text-sm">
-                                            <i class="fas fa-upload"></i>
-                                            이미지 첨부
-                                        </button>
+                                        <!-- 이미지 업로드/삭제 버튼 -->
+                                        <div class="flex gap-2">
+                                            <input type="file" id="bgImageUpload" accept="image/*" class="hidden" onchange="handleBgImageUpload(event)">
+                                            <button onclick="document.getElementById('bgImageUpload').click()" 
+                                                class="flex-1 px-3 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition flex items-center justify-center gap-1 text-xs">
+                                                <i class="fas fa-upload"></i>
+                                                첨부
+                                            </button>
+                                            <button onclick="handleBgImageDelete()" 
+                                                class="flex-1 px-3 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition flex items-center justify-center gap-1 text-xs">
+                                                <i class="fas fa-trash"></i>
+                                                삭제
+                                            </button>
+                                        </div>
                                     </div>
 
                                     <!-- 배경 음악 선택 -->
@@ -179,13 +186,20 @@
                                         <select id="bgMusicSelect" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mb-2">
                                             <option value="">선택 안함 (음악 없음)</option>
                                         </select>
-                                        <!-- 음악 업로드 버튼 -->
-                                        <input type="file" id="bgMusicUpload" accept="audio/*" class="hidden" onchange="handleBgMusicUpload(event)">
-                                        <button onclick="document.getElementById('bgMusicUpload').click()" 
-                                            class="w-full px-3 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition flex items-center justify-center gap-2 text-sm">
-                                            <i class="fas fa-upload"></i>
-                                            음악 첨부
-                                        </button>
+                                        <!-- 음악 업로드/삭제 버튼 -->
+                                        <div class="flex gap-2">
+                                            <input type="file" id="bgMusicUpload" accept="audio/*" class="hidden" onchange="handleBgMusicUpload(event)">
+                                            <button onclick="document.getElementById('bgMusicUpload').click()" 
+                                                class="flex-1 px-3 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition flex items-center justify-center gap-1 text-xs">
+                                                <i class="fas fa-upload"></i>
+                                                첨부
+                                            </button>
+                                            <button onclick="handleBgMusicDelete()" 
+                                                class="flex-1 px-3 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition flex items-center justify-center gap-1 text-xs">
+                                                <i class="fas fa-trash"></i>
+                                                삭제
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

@@ -980,6 +980,60 @@ async function handleBgMusicUpload(event) {
     event.target.value = '';
 }
 
+// Background Image Delete Handler
+function handleBgImageDelete() {
+    const select = document.getElementById('bgImageSelect');
+    const selectedValue = select.value;
+    
+    if (!selectedValue) {
+        alert('삭제할 배경 이미지를 먼저 선택해주세요.');
+        return;
+    }
+
+    if (!confirm('선택한 배경 이미지를 삭제하시겠습니까?')) {
+        return;
+    }
+
+    // Remove from array
+    const imageIndex = userBackgroundImages.findIndex(img => img.id == selectedValue);
+    if (imageIndex > -1) {
+        const deletedImage = userBackgroundImages.splice(imageIndex, 1)[0];
+        console.log('🗑️ 배경 이미지 삭제됨:', deletedImage.name);
+        
+        // Update dropdown
+        populateBgImageSelect();
+        
+        alert(`✅ 배경 이미지 "${deletedImage.name}"가 삭제되었습니다.`);
+    }
+}
+
+// Background Music Delete Handler
+function handleBgMusicDelete() {
+    const select = document.getElementById('bgMusicSelect');
+    const selectedValue = select.value;
+    
+    if (!selectedValue) {
+        alert('삭제할 배경 음악을 먼저 선택해주세요.');
+        return;
+    }
+
+    if (!confirm('선택한 배경 음악을 삭제하시겠습니까?')) {
+        return;
+    }
+
+    // Remove from array
+    const musicIndex = userBackgroundMusic.findIndex(music => music.id == selectedValue);
+    if (musicIndex > -1) {
+        const deletedMusic = userBackgroundMusic.splice(musicIndex, 1)[0];
+        console.log('🗑️ 배경 음악 삭제됨:', deletedMusic.name);
+        
+        // Update dropdown
+        populateBgMusicSelect();
+        
+        alert(`✅ 배경 음악 "${deletedMusic.name}"이 삭제되었습니다.`);
+    }
+}
+
 // Make functions globally accessible
 window.previewVoice = previewVoice;
 window.onStageChanged = onStageChanged;
@@ -988,6 +1042,8 @@ window.displayBlogImages = displayBlogImages;
 window.loadUserBackgrounds = loadUserBackgrounds;
 window.handleBgImageUpload = handleBgImageUpload;
 window.handleBgMusicUpload = handleBgMusicUpload;
+window.handleBgImageDelete = handleBgImageDelete;
+window.handleBgMusicDelete = handleBgMusicDelete;
 
 console.log('✅ Global functions registered');
 // Deployed at: Mon Dec  1 06:20:30 UTC 2025
