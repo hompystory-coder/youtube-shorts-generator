@@ -850,14 +850,31 @@ async function loadUserBackgrounds() {
         if (settingsResponse.ok) {
             const settingsData = await settingsResponse.json();
             if (settingsData.success && settingsData.data) {
-                // Extract background images
-                userBackgroundImages = settingsData.data.background_images || [];
-                console.log('✅ Loaded background images:', userBackgroundImages.length);
-                populateBgImageSelect();
+                // Merge server data with localStorage data (keep localStorage priority)
+                const serverImages = settingsData.data.background_images || [];
+                const serverMusic = settingsData.data.background_music || [];
                 
-                // Extract background music
-                userBackgroundMusic = settingsData.data.background_music || [];
-                console.log('✅ Loaded background music:', userBackgroundMusic.length);
+                // Add server images only if they don't exist in localStorage
+                serverImages.forEach(serverImg => {
+                    const exists = userBackgroundImages.some(localImg => localImg.id === serverImg.id);
+                    if (!exists) {
+                        userBackgroundImages.push(serverImg);
+                    }
+                });
+                
+                // Add server music only if they don't exist in localStorage
+                serverMusic.forEach(serverMusic => {
+                    const exists = userBackgroundMusic.some(localMusic => localMusic.id === serverMusic.id);
+                    if (!exists) {
+                        userBackgroundMusic.push(serverMusic);
+                    }
+                });
+                
+                console.log('✅ Merged background images:', userBackgroundImages.length);
+                console.log('✅ Merged background music:', userBackgroundMusic.length);
+                
+                // Update dropdowns
+                populateBgImageSelect();
                 populateBgMusicSelect();
             }
         } else {
