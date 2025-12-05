@@ -233,6 +233,23 @@ function setupEventListeners() {
     if (generateVideoBtn) {
         generateVideoBtn.addEventListener('click', handleGenerateVideo);
     }
+    
+    // Font preview
+    const fontSelect = document.getElementById('fontSelect');
+    const fontPreviewText = document.getElementById('fontPreviewText');
+    if (fontSelect && fontPreviewText) {
+        // Update preview on font change
+        fontSelect.addEventListener('change', function() {
+            const selectedFont = fontSelect.value;
+            fontPreviewText.style.fontFamily = `"${selectedFont}", sans-serif`;
+            console.log('🎨 Font preview updated:', selectedFont);
+        });
+        
+        // Set initial preview
+        const initialFont = fontSelect.value;
+        fontPreviewText.style.fontFamily = `"${initialFont}", sans-serif`;
+        console.log('🎨 Initial font preview set:', initialFont);
+    }
 }
 
 // Handle blog crawling
