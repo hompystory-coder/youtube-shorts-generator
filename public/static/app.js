@@ -88,6 +88,40 @@ function handleLogout() {
     window.location.href = '/';
 }
 
+// Load uploaded files from localStorage
+function loadUploadedFiles() {
+    try {
+        // Load background images
+        const savedImages = localStorage.getItem('uploaded_bg_images');
+        if (savedImages) {
+            userBackgroundImages = JSON.parse(savedImages);
+            console.log(`📦 LocalStorage에서 배경 이미지 로드: ${userBackgroundImages.length}개`);
+            populateBgImageSelect();
+        }
+        
+        // Load background music
+        const savedMusic = localStorage.getItem('uploaded_bg_music');
+        if (savedMusic) {
+            userBackgroundMusic = JSON.parse(savedMusic);
+            console.log(`📦 LocalStorage에서 배경 음악 로드: ${userBackgroundMusic.length}개`);
+            populateBgMusicSelect();
+        }
+    } catch (error) {
+        console.error('❌ LocalStorage 로드 실패:', error);
+    }
+}
+
+// Save uploaded files to localStorage
+function saveUploadedFiles() {
+    try {
+        localStorage.setItem('uploaded_bg_images', JSON.stringify(userBackgroundImages));
+        localStorage.setItem('uploaded_bg_music', JSON.stringify(userBackgroundMusic));
+        console.log('💾 LocalStorage에 저장 완료');
+    } catch (error) {
+        console.error('❌ LocalStorage 저장 실패:', error);
+    }
+}
+
 // Initialize app
 document.addEventListener('DOMContentLoaded', async function() {
     console.log('🎬 Initializing YouTube Shorts Generator...');
@@ -95,7 +129,10 @@ document.addEventListener('DOMContentLoaded', async function() {
     // Check authentication
     await checkAuth();
     
-    // Load user's background images and music
+    // Load uploaded files from localStorage first
+    loadUploadedFiles();
+    
+    // Load user's background images and music from server
     await loadUserBackgrounds();
     
     // Setup event listeners
@@ -863,14 +900,8 @@ function populateBgMusicSelect() {
     userBackgroundMusic.forEach(music => {
         const option = document.createElement('option');
         option.value = music.id;
-        
-        // Display duration only if available
-        if (music.duration && music.duration > 0) {
-            option.textContent = `${music.name} (${music.duration}초)`;
-        } else {
-            option.textContent = music.name;
-        }
-        
+        // Display name only (no duration)
+        option.textContent = music.name;
         option.dataset.url = music.url || music.data_url;
         select.appendChild(option);
     });
@@ -915,6 +946,9 @@ async function handleBgImageUpload(event) {
 
         // Add to list
         userBackgroundImages.push(newImage);
+        
+        // Save to localStorage
+        saveUploadedFiles();
         
         // Update select dropdown
         populateBgImageSelect();
@@ -981,6 +1015,9 @@ async function handleBgMusicUpload(event) {
             // Add to list
             userBackgroundMusic.push(newMusic);
             
+            // Save to localStorage
+            saveUploadedFiles();
+            
             // Update select dropdown
             populateBgMusicSelect();
             
@@ -988,7 +1025,7 @@ async function handleBgMusicUpload(event) {
             document.getElementById('bgMusicSelect').value = newMusic.id;
             
             console.log('✅ 배경 음악 추가됨:', newMusic.name);
-            alert(`✅ 배경 음악 "${file.name}" (${durationInSeconds}초)이 추가되었습니다!`);
+            alert(`✅ 배경 음악 "${file.name}"이 추가되었습니다!`);
         });
         
         // Handle error if duration cannot be determined
@@ -1009,6 +1046,9 @@ async function handleBgMusicUpload(event) {
 
             // Add to list
             userBackgroundMusic.push(newMusic);
+            
+            // Save to localStorage
+            saveUploadedFiles();
             
             // Update select dropdown
             populateBgMusicSelect();
@@ -1050,6 +1090,9 @@ function handleBgImageDelete() {
         const deletedImage = userBackgroundImages.splice(imageIndex, 1)[0];
         console.log('🗑️ 배경 이미지 삭제됨:', deletedImage.name);
         
+        // Save to localStorage
+        saveUploadedFiles();
+        
         // Update dropdown
         populateBgImageSelect();
         
@@ -1076,6 +1119,9 @@ function handleBgMusicDelete() {
     if (musicIndex > -1) {
         const deletedMusic = userBackgroundMusic.splice(musicIndex, 1)[0];
         console.log('🗑️ 배경 음악 삭제됨:', deletedMusic.name);
+        
+        // Save to localStorage
+        saveUploadedFiles();
         
         // Update dropdown
         populateBgMusicSelect();
