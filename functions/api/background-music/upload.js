@@ -15,8 +15,15 @@ export async function onRequestPost(context) {
     // Support both Cloudflare and Express
     const req = request.body ? request : { body: request };
     
-    // Get auth token
-    const authHeader = request.headers?.get('Authorization') || request.headers?.authorization;
+    // Get auth token (handle both Cloudflare and Express)
+    let authHeader;
+    if (request.headers && typeof request.headers.get === 'function') {
+      // Cloudflare Pages Functions
+      authHeader = request.headers.get('Authorization');
+    } else {
+      // Express
+      authHeader = request.headers?.['authorization'] || request.headers?.['Authorization'];
+    }
     const token = authHeader?.replace('Bearer ', '');
     
     console.log('[Background Music Upload] POST request, token:', token ? 'present' : 'missing');
