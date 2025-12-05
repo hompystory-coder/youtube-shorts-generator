@@ -110,6 +110,8 @@
             <div id="successMessage" class="hidden mt-4 p-4 bg-green-100 text-green-700 rounded-lg">
                 <i class="fas fa-check-circle mr-2"></i>
                 API 키가 성공적으로 저장되었습니다!
+                <br>
+                <small class="text-green-600">2초 후 메인 페이지로 이동합니다...</small>
             </div>
 
             <!-- Error Message -->
@@ -257,10 +259,11 @@
                     document.getElementById('errorMessage').classList.add('hidden');
                     console.log('✅ API keys saved successfully');
 
-                    // Hide success message after 3 seconds
+                    // Redirect to home page after 2 seconds
                     setTimeout(() => {
-                        document.getElementById('successMessage').classList.add('hidden');
-                    }, 3000);
+                        console.log('🏠 Redirecting to home page...');
+                        window.location.href = '/';
+                    }, 2000);
                 } else {
                     throw new Error(result.error || 'Failed to save');
                 }
