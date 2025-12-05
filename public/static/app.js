@@ -234,22 +234,170 @@ function setupEventListeners() {
         generateVideoBtn.addEventListener('click', handleGenerateVideo);
     }
     
-    // Font preview
+    // Font preview system
+    setupFontPreview();
+}
+
+// Setup comprehensive font preview
+function setupFontPreview() {
     const fontSelect = document.getElementById('fontSelect');
+    const fontSizeSelect = document.getElementById('fontSizeSelect');
+    const fontColorSelect = document.getElementById('fontColorSelect');
+    const textShadowSelect = document.getElementById('textShadowSelect');
+    const captionBgSelect = document.getElementById('captionBgSelect');
+    const fontWeightSelect = document.getElementById('fontWeightSelect');
+    const captionPositionSelect = document.getElementById('captionPositionSelect');
+    
     const fontPreviewText = document.getElementById('fontPreviewText');
-    if (fontSelect && fontPreviewText) {
-        // Update preview on font change
-        fontSelect.addEventListener('change', function() {
+    const fontPreview = document.getElementById('fontPreview');
+    
+    if (!fontPreviewText || !fontPreview) {
+        console.warn('⚠️ Font preview elements not found');
+        return;
+    }
+    
+    // Update preview function
+    function updatePreview() {
+        // Font family
+        if (fontSelect) {
             const selectedFont = fontSelect.value;
             fontPreviewText.style.fontFamily = `"${selectedFont}", sans-serif`;
-            console.log('🎨 Font preview updated:', selectedFont);
-        });
+        }
         
-        // Set initial preview
-        const initialFont = fontSelect.value;
-        fontPreviewText.style.fontFamily = `"${initialFont}", sans-serif`;
-        console.log('🎨 Initial font preview set:', initialFont);
+        // Font size
+        if (fontSizeSelect) {
+            const fontSize = fontSizeSelect.value + 'px';
+            fontPreviewText.style.fontSize = fontSize;
+        }
+        
+        // Font color
+        if (fontColorSelect) {
+            const fontColor = fontColorSelect.value;
+            fontPreviewText.style.color = fontColor;
+        }
+        
+        // Text shadow
+        if (textShadowSelect) {
+            const shadowType = textShadowSelect.value;
+            let shadowStyle = '';
+            
+            switch(shadowType) {
+                case 'none':
+                    shadowStyle = 'none';
+                    break;
+                case 'light':
+                    shadowStyle = '2px 2px 4px rgba(0, 0, 0, 0.5)';
+                    break;
+                case 'medium':
+                    shadowStyle = '3px 3px 6px rgba(0, 0, 0, 0.7)';
+                    break;
+                case 'heavy':
+                    shadowStyle = '4px 4px 8px rgba(0, 0, 0, 0.9)';
+                    break;
+                case 'glow':
+                    shadowStyle = '0 0 10px rgba(255, 255, 255, 0.8), 0 0 20px rgba(255, 255, 255, 0.6)';
+                    break;
+            }
+            
+            fontPreviewText.style.textShadow = shadowStyle;
+        }
+        
+        // Caption background
+        if (captionBgSelect) {
+            const bgType = captionBgSelect.value;
+            let bgStyle = '';
+            let padding = '8px 16px';
+            let borderRadius = '8px';
+            
+            switch(bgType) {
+                case 'none':
+                    bgStyle = 'transparent';
+                    padding = '0';
+                    borderRadius = '0';
+                    break;
+                case 'semi':
+                    bgStyle = 'rgba(0, 0, 0, 0.6)';
+                    break;
+                case 'solid':
+                    bgStyle = 'rgba(0, 0, 0, 0.9)';
+                    break;
+                case 'blur':
+                    bgStyle = 'rgba(0, 0, 0, 0.4)';
+                    fontPreviewText.style.backdropFilter = 'blur(10px)';
+                    break;
+            }
+            
+            fontPreviewText.style.backgroundColor = bgStyle;
+            fontPreviewText.style.padding = padding;
+            fontPreviewText.style.borderRadius = borderRadius;
+            
+            if (bgType !== 'blur') {
+                fontPreviewText.style.backdropFilter = 'none';
+            }
+        }
+        
+        // Font weight
+        if (fontWeightSelect) {
+            const fontWeight = fontWeightSelect.value;
+            fontPreviewText.style.fontWeight = fontWeight;
+        }
+        
+        // Caption position
+        if (captionPositionSelect) {
+            const position = captionPositionSelect.value;
+            
+            switch(position) {
+                case 'top':
+                    fontPreview.style.alignItems = 'flex-start';
+                    fontPreview.style.paddingTop = '20px';
+                    fontPreview.style.paddingBottom = '10px';
+                    break;
+                case 'center':
+                    fontPreview.style.alignItems = 'center';
+                    fontPreview.style.paddingTop = '10px';
+                    fontPreview.style.paddingBottom = '10px';
+                    break;
+                case 'bottom':
+                    fontPreview.style.alignItems = 'flex-end';
+                    fontPreview.style.paddingTop = '10px';
+                    fontPreview.style.paddingBottom = '20px';
+                    break;
+            }
+            
+            fontPreview.style.display = 'flex';
+            fontPreview.style.flexDirection = 'column';
+            fontPreview.style.justifyContent = 'center';
+        }
+        
+        console.log('🎨 Preview updated with all settings');
     }
+    
+    // Add event listeners
+    if (fontSelect) {
+        fontSelect.addEventListener('change', updatePreview);
+    }
+    if (fontSizeSelect) {
+        fontSizeSelect.addEventListener('change', updatePreview);
+    }
+    if (fontColorSelect) {
+        fontColorSelect.addEventListener('change', updatePreview);
+    }
+    if (textShadowSelect) {
+        textShadowSelect.addEventListener('change', updatePreview);
+    }
+    if (captionBgSelect) {
+        captionBgSelect.addEventListener('change', updatePreview);
+    }
+    if (fontWeightSelect) {
+        fontWeightSelect.addEventListener('change', updatePreview);
+    }
+    if (captionPositionSelect) {
+        captionPositionSelect.addEventListener('change', updatePreview);
+    }
+    
+    // Set initial preview
+    updatePreview();
+    console.log('🎨 Initial font preview setup complete');
 }
 
 // Handle blog crawling
