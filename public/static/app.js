@@ -656,6 +656,9 @@ if (typeof closePricingModal === 'undefined') {
 
 console.log('✅ App.js initialized');
 
+// Voice preview cache
+const voicePreviewCache = {};
+
 // Preview voice function
 async function previewVoice() {
     console.log('🎤 Preview voice clicked');
@@ -672,6 +675,28 @@ async function previewVoice() {
     }
     
     const selectedVoice = voiceSelect.value;
+    
+    // Check cache first
+    const cacheKey = `${selectedVoice}`;
+    if (voicePreviewCache[cacheKey]) {
+        console.log('🎵 Using cached voice preview for:', selectedVoice);
+        
+        // Play cached audio
+        if (audioElement) {
+            audioElement.src = voicePreviewCache[cacheKey];
+            audioElement.play();
+            
+            // Update button
+            previewText.textContent = '재생 중...';
+            previewIcon.className = 'fas fa-stop';
+            
+            audioElement.onended = () => {
+                previewText.textContent = '음성 미리듣기';
+                previewIcon.className = 'fas fa-play';
+            };
+        }
+        return;
+    }
     
     // Get API keys from hidden inputs (loaded from mypage)
     const minimaxApiKey = document.getElementById('minimaxApiKey')?.value;
@@ -726,6 +751,10 @@ async function previewVoice() {
         }
         
         console.log('✅ Voice preview generated:', data.data.audioUrl);
+        
+        // Cache the audio URL
+        voicePreviewCache[cacheKey] = data.data.audioUrl;
+        console.log('💾 Cached voice preview for:', selectedVoice);
         
         // Play audio
         if (audioElement && data.data.audioUrl) {
