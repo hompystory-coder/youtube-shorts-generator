@@ -49,3 +49,6 @@ Thumbs.db
 test-*.js
 test-*.sh
 screenshots-test/
+
+# User uploaded files
+public/uploads/

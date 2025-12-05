@@ -25,6 +25,8 @@ import { onRequestPost as loginHandler, onRequestOptions as loginOptions } from 
 import { onRequestGet as settingsGetHandler, onRequestPost as settingsPostHandler, onRequestOptions as settingsOptions } from './functions/api/settings/[userId]-fallback.js';
 import { onRequestGet as bgImagesHandler } from './functions/api/background-images/index.js';
 import { onRequestGet as bgMusicHandler } from './functions/api/background-music/index.js';
+import { onRequestPost as bgImagesUploadHandler, onRequestOptions as bgImagesUploadOptions } from './functions/api/background-images/upload.js';
+import { onRequestPost as bgMusicUploadHandler, onRequestOptions as bgMusicUploadOptions } from './functions/api/background-music/upload.js';
 import { onRequestPost as voicePreviewHandler, onRequestOptions as voicePreviewOptions } from './functions/api/voice/preview.js';
 import { onRequestPost as crawlBlogHandler, onRequestOptions as crawlBlogOptions } from './functions/api/crawl/blog.js';
 
@@ -84,6 +86,32 @@ app.get('/api/background-images', async (req, res) => {
 app.get('/api/background-music', async (req, res) => {
   const context = createContext(req, res);
   const response = await bgMusicHandler(context);
+  const body = await response.text();
+  res.status(response.status).set(Object.fromEntries(response.headers.entries())).send(body);
+});
+
+// Background Images Upload
+app.options('/api/background-images/upload', async (req, res) => {
+  const response = await bgImagesUploadOptions();
+  res.status(response.status).set(Object.fromEntries(response.headers.entries())).send();
+});
+
+app.post('/api/background-images/upload', async (req, res) => {
+  const context = createContext(req, res);
+  const response = await bgImagesUploadHandler(context);
+  const body = await response.text();
+  res.status(response.status).set(Object.fromEntries(response.headers.entries())).send(body);
+});
+
+// Background Music Upload
+app.options('/api/background-music/upload', async (req, res) => {
+  const response = await bgMusicUploadOptions();
+  res.status(response.status).set(Object.fromEntries(response.headers.entries())).send();
+});
+
+app.post('/api/background-music/upload', async (req, res) => {
+  const context = createContext(req, res);
+  const response = await bgMusicUploadHandler(context);
   const body = await response.text();
   res.status(response.status).set(Object.fromEntries(response.headers.entries())).send(body);
 });

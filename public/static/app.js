@@ -957,6 +957,13 @@ async function handleBgImageUpload(event) {
 
     console.log('📤 배경 이미지 업로드:', file.name);
 
+    // Check limit: max 5 images
+    if (userBackgroundImages.length >= 5) {
+        alert('⚠️ 배경 이미지는 최대 5개까지만 등록할 수 있습니다.\n기존 이미지를 삭제한 후 다시 시도해주세요.');
+        event.target.value = '';
+        return;
+    }
+
     // Validate file type
     if (!file.type.startsWith('image/')) {
         alert('이미지 파일만 업로드할 수 있습니다.');
@@ -969,36 +976,72 @@ async function handleBgImageUpload(event) {
         return;
     }
 
-    // Convert to base64
+    // Show loading message
+    const loadingMsg = alert('📤 이미지를 서버에 업로드 중입니다...');
+    
+    // Convert to base64 and upload to server
     const reader = new FileReader();
     reader.onload = async function(e) {
         const dataUrl = e.target.result;
         
-        // Create image object
-        const newImage = {
-            id: Date.now(),
-            name: file.name,
-            url: dataUrl,
-            data_url: dataUrl,
-            size: file.size,
-            uploadedAt: new Date().toISOString(),
-            created_at: new Date().toISOString()
-        };
+        try {
+            // Get user info for auth
+            const userInfo = JSON.parse(localStorage.getItem('user_info') || '{}');
+            const token = localStorage.getItem('jwt_token') || 
+                         localStorage.getItem('auth_token') || 
+                         localStorage.getItem('token') || '';
+            
+            // Upload to server
+            const response = await fetch(`${API_BASE}/api/background-images/upload`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    name: file.name,
+                    dataUrl: dataUrl,
+                    userId: userInfo.id || 'anonymous'
+                })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                const uploadedImage = result.data;
+                
+                // Create image object with server URL
+                const newImage = {
+                    id: uploadedImage.id || Date.now(),
+                    name: uploadedImage.name,
+                    url: uploadedImage.url, // Server URL
+                    size: uploadedImage.size,
+                    uploadedAt: uploadedImage.uploadedAt,
+                    created_at: uploadedImage.created_at
+                };
 
-        // Add to list
-        userBackgroundImages.push(newImage);
-        
-        // Save to localStorage
-        saveUploadedFiles();
-        
-        // Update select dropdown
-        populateBgImageSelect();
-        
-        // Auto-select the new image
-        document.getElementById('bgImageSelect').value = newImage.id;
-        
-        console.log('✅ 배경 이미지 추가됨:', newImage.name);
-        alert(`✅ 배경 이미지 "${file.name}"가 추가되었습니다!`);
+                // Add to list
+                userBackgroundImages.push(newImage);
+                
+                // Save to localStorage (only URL, not data)
+                saveUploadedFiles();
+                
+                // Update select dropdown
+                populateBgImageSelect();
+                
+                // Auto-select the new image
+                document.getElementById('bgImageSelect').value = newImage.id;
+                
+                console.log('✅ 배경 이미지 업로드 완료:', newImage.name);
+                console.log('✅ 서버 URL:', newImage.url);
+                alert(`✅ 배경 이미지 "${file.name}"가 추가되었습니다!`);
+            } else {
+                throw new Error(result.message || '업로드 실패');
+            }
+        } catch (error) {
+            console.error('❌ 이미지 업로드 실패:', error);
+            alert(`❌ 이미지 업로드에 실패했습니다: ${error.message}`);
+        }
     };
     
     reader.readAsDataURL(file);
@@ -1014,74 +1057,91 @@ async function handleBgMusicUpload(event) {
 
     console.log('📤 배경 음악 업로드:', file.name);
 
+    // Check limit: max 5 music files
+    if (userBackgroundMusic.length >= 5) {
+        alert('⚠️ 배경 음악은 최대 5개까지만 등록할 수 있습니다.\n기존 음악을 삭제한 후 다시 시도해주세요.');
+        event.target.value = '';
+        return;
+    }
+
     // Validate file type
     if (!file.type.startsWith('audio/')) {
         alert('음악 파일만 업로드할 수 있습니다.');
         return;
     }
 
-    // Validate file size (max 10MB)
-    if (file.size > 10 * 1024 * 1024) {
-        alert('음악 파일은 10MB 이하만 업로드할 수 있습니다.');
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+        alert('음악 파일은 5MB 이하만 업로드할 수 있습니다.');
         return;
     }
 
-    // Convert to base64
+    // Show loading message  
+    console.log('📤 음악을 서버에 업로드 중입니다...');
+    
+    // Convert to base64 and upload to server
     const reader = new FileReader();
     reader.onload = async function(e) {
         const dataUrl = e.target.result;
         
-        console.log('📦 음악 데이터 변환 완료, localStorage에 즉시 저장합니다...');
-        
-        // Create music object WITHOUT duration (즉시 저장)
-        const newMusic = {
-            id: Date.now(),
-            name: file.name,
-            url: dataUrl,
-            data_url: dataUrl,
-            size: file.size,
-            uploadedAt: new Date().toISOString(),
-            created_at: new Date().toISOString()
-        };
-
-        // IMMEDIATELY add to list and save
-        userBackgroundMusic.push(newMusic);
-        
-        // Save to localStorage IMMEDIATELY
         try {
-            const musicJson = JSON.stringify(userBackgroundMusic);
-            const sizeInMB = (musicJson.length / (1024 * 1024)).toFixed(2);
-            console.log(`📊 저장할 음악 데이터 크기: ${sizeInMB} MB`);
+            // Get user info for auth
+            const userInfo = JSON.parse(localStorage.getItem('user_info') || '{}');
+            const token = localStorage.getItem('jwt_token') || 
+                         localStorage.getItem('auth_token') || 
+                         localStorage.getItem('token') || '';
             
-            localStorage.setItem('uploaded_bg_music', musicJson);
-            console.log('💾 LocalStorage에 배경 음악 즉시 저장 완료!');
+            // Upload to server
+            const response = await fetch(`${API_BASE}/api/background-music/upload`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    name: file.name,
+                    dataUrl: dataUrl,
+                    userId: userInfo.id || 'anonymous'
+                })
+            });
             
-            // Verify save
-            const saved = localStorage.getItem('uploaded_bg_music');
-            if (saved) {
-                const parsed = JSON.parse(saved);
-                console.log('✅ 저장 검증 성공:', parsed.length, '개의 음악 파일');
-                console.log('✅ 저장된 음악 파일명:', parsed.map(m => m.name).join(', '));
+            const result = await response.json();
+            
+            if (result.success) {
+                const uploadedMusic = result.data;
+                
+                // Create music object with server URL
+                const newMusic = {
+                    id: uploadedMusic.id || Date.now(),
+                    name: uploadedMusic.name,
+                    url: uploadedMusic.url, // Server URL
+                    size: uploadedMusic.size,
+                    uploadedAt: uploadedMusic.uploadedAt,
+                    created_at: uploadedMusic.created_at
+                };
+
+                // Add to list
+                userBackgroundMusic.push(newMusic);
+                
+                // Save to localStorage (only URL, not data)
+                saveUploadedFiles();
+                
+                // Update select dropdown
+                populateBgMusicSelect();
+                
+                // Auto-select the new music
+                document.getElementById('bgMusicSelect').value = newMusic.id;
+                
+                console.log('✅ 배경 음악 업로드 완료:', newMusic.name);
+                console.log('✅ 서버 URL:', newMusic.url);
+                alert(`✅ 배경 음악 "${file.name}"이 추가되었습니다!`);
             } else {
-                console.error('❌ 저장 검증 실패: localStorage에서 데이터를 읽을 수 없음');
+                throw new Error(result.message || '업로드 실패');
             }
-        } catch (err) {
-            console.error('❌ LocalStorage 저장 실패:', err);
-            console.error('❌ 에러 이름:', err.name);
-            console.error('❌ 에러 메시지:', err.message);
-            if (err.name === 'QuotaExceededError') {
-                alert('⚠️ 저장 공간이 부족합니다. 음악 파일이 너무 큽니다.');
-            }
+        } catch (error) {
+            console.error('❌ 음악 업로드 실패:', error);
+            alert(`❌ 음악 업로드에 실패했습니다: ${error.message}`);
         }
-        
-        // Update select dropdown
-        populateBgMusicSelect();
-        
-        // Auto-select the new music
-        document.getElementById('bgMusicSelect').value = newMusic.id;
-        
-        console.log('✅ 배경 음악 추가됨:', newMusic.name);
-        alert(`✅ 배경 음악 "${file.name}"이 추가되었습니다!`);
     };
     
     reader.readAsDataURL(file);
