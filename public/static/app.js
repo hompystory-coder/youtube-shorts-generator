@@ -120,22 +120,35 @@ function loadUploadedFiles() {
 // Save uploaded files to localStorage
 function saveUploadedFiles() {
     try {
-        localStorage.setItem('uploaded_bg_images', JSON.stringify(userBackgroundImages));
-        localStorage.setItem('uploaded_bg_music', JSON.stringify(userBackgroundMusic));
+        // Save images
+        const imagesJson = JSON.stringify(userBackgroundImages);
+        localStorage.setItem('uploaded_bg_images', imagesJson);
+        
+        // Save music
+        const musicJson = JSON.stringify(userBackgroundMusic);
+        localStorage.setItem('uploaded_bg_music', musicJson);
+        
         console.log('💾 LocalStorage에 저장 완료');
         console.log('💾 저장된 이미지:', userBackgroundImages.length + '개');
         console.log('💾 저장된 음악:', userBackgroundMusic.length + '개');
         
-        // 저장 확인
-        const verify = localStorage.getItem('uploaded_bg_images');
-        if (verify) {
-            console.log('✅ 저장 검증 성공');
+        // Verify images
+        const verifyImages = localStorage.getItem('uploaded_bg_images');
+        const verifyMusic = localStorage.getItem('uploaded_bg_music');
+        
+        if (verifyImages && verifyMusic) {
+            const parsedImages = JSON.parse(verifyImages);
+            const parsedMusic = JSON.parse(verifyMusic);
+            console.log('✅ 저장 검증 성공 - 이미지:', parsedImages.length, '개, 음악:', parsedMusic.length, '개');
         } else {
-            console.error('❌ 저장 검증 실패 - 데이터가 없음');
+            console.error('❌ 저장 검증 실패 - 이미지:', !!verifyImages, ', 음악:', !!verifyMusic);
         }
+        
+        return true;
     } catch (error) {
         console.error('❌ LocalStorage 저장 실패:', error);
         console.error('에러 상세:', error.message);
+        return false;
     }
 }
 
@@ -979,78 +992,42 @@ async function handleBgMusicUpload(event) {
     reader.onload = async function(e) {
         const dataUrl = e.target.result;
         
-        // Create temporary audio element to get duration
-        const audio = new Audio();
-        audio.src = dataUrl;
+        console.log('📦 음악 데이터 변환 완료, localStorage에 즉시 저장합니다...');
         
-        // Wait for metadata to load
-        audio.addEventListener('loadedmetadata', function() {
-            const durationInSeconds = Math.round(audio.duration);
-            
-            console.log(`📊 오디오 길이: ${durationInSeconds}초`);
-            
-            // Create music object with actual duration
-            const newMusic = {
-                id: Date.now(),
-                name: file.name,
-                url: dataUrl,
-                data_url: dataUrl,
-                size: file.size,
-                duration: durationInSeconds,
-                uploadedAt: new Date().toISOString(),
-                created_at: new Date().toISOString()
-            };
+        // Create music object WITHOUT duration (즉시 저장)
+        const newMusic = {
+            id: Date.now(),
+            name: file.name,
+            url: dataUrl,
+            data_url: dataUrl,
+            size: file.size,
+            uploadedAt: new Date().toISOString(),
+            created_at: new Date().toISOString()
+        };
 
-            // Add to list
-            userBackgroundMusic.push(newMusic);
-            
-            // Save to localStorage
-            saveUploadedFiles();
-            
-            // Update select dropdown
-            populateBgMusicSelect();
-            
-            // Auto-select the new music
-            document.getElementById('bgMusicSelect').value = newMusic.id;
-            
-            console.log('✅ 배경 음악 추가됨:', newMusic.name);
-            alert(`✅ 배경 음악 "${file.name}"이 추가되었습니다!`);
-        });
+        // IMMEDIATELY add to list and save
+        userBackgroundMusic.push(newMusic);
         
-        // Handle error if duration cannot be determined
-        audio.addEventListener('error', function() {
-            console.error('❌ 오디오 길이 측정 실패');
+        // Save to localStorage IMMEDIATELY
+        try {
+            localStorage.setItem('uploaded_bg_music', JSON.stringify(userBackgroundMusic));
+            console.log('💾 LocalStorage에 배경 음악 즉시 저장 완료!');
             
-            // Create music object without duration
-            const newMusic = {
-                id: Date.now(),
-                name: file.name,
-                url: dataUrl,
-                data_url: dataUrl,
-                size: file.size,
-                duration: null,
-                uploadedAt: new Date().toISOString(),
-                created_at: new Date().toISOString()
-            };
-
-            // Add to list
-            userBackgroundMusic.push(newMusic);
-            
-            // Save to localStorage
-            saveUploadedFiles();
-            
-            // Update select dropdown
-            populateBgMusicSelect();
-            
-            // Auto-select the new music
-            document.getElementById('bgMusicSelect').value = newMusic.id;
-            
-            console.log('✅ 배경 음악 추가됨 (길이 측정 실패):', newMusic.name);
-            alert(`✅ 배경 음악 "${file.name}"이 추가되었습니다!`);
-        });
+            // Verify save
+            const saved = JSON.parse(localStorage.getItem('uploaded_bg_music') || '[]');
+            console.log('✅ 저장 검증 성공:', saved.length, '개의 음악 파일');
+        } catch (err) {
+            console.error('❌ LocalStorage 저장 실패:', err);
+        }
         
-        // Trigger loading
-        audio.load();
+        // Update select dropdown
+        populateBgMusicSelect();
+        
+        // Auto-select the new music
+        document.getElementById('bgMusicSelect').value = newMusic.id;
+        
+        console.log('✅ 배경 음악 추가됨:', newMusic.name);
+        alert(`✅ 배경 음악 "${file.name}"이 추가되었습니다!`);
     };
     
     reader.readAsDataURL(file);
