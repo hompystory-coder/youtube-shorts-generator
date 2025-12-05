@@ -3,7 +3,19 @@
 export async function onRequestPost(context) {
   try {
     const { request } = context;
-    const { url } = await request.json();
+    
+    // Handle both Express and Cloudflare Pages environments
+    let url;
+    if (request.body) {
+      // Express environment
+      url = request.body.url;
+    } else if (typeof request.json === 'function') {
+      // Cloudflare Pages environment
+      const body = await request.json();
+      url = body.url;
+    } else {
+      throw new Error('Invalid request format');
+    }
 
     if (!url) {
       return new Response(JSON.stringify({

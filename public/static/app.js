@@ -201,6 +201,11 @@ document.addEventListener('DOMContentLoaded', async function() {
     setupEventListeners();
     console.log('✅ Step 4 완료');
     
+    // Load saved templates
+    console.log('📋 Step 5: 저장된 템플릿 로드 중...');
+    loadSavedTemplates();
+    console.log('✅ Step 5 완료');
+    
     console.log('🎬 ========================================');
     console.log('🎬 초기화 완료!');
     console.log('🎬 최종 userBackgroundImages:', userBackgroundImages.length, '개');
@@ -1404,6 +1409,184 @@ function handleBgMusicDelete() {
     }
 }
 
+// Template Management Functions
+function getCurrentSettings() {
+    return {
+        // Font settings
+        font: document.getElementById('fontSelect')?.value || 'Noto Sans KR',
+        fontSize: document.getElementById('fontSizeSelect')?.value || '56',
+        fontColor: document.getElementById('fontColorSelect')?.value || 'white',
+        fontWeight: document.getElementById('fontWeightSelect')?.value || 'bold',
+        textShadow: document.getElementById('textShadowSelect')?.value || 'light',
+        captionBg: document.getElementById('captionBgSelect')?.value || 'none',
+        captionPosition: document.getElementById('captionPositionSelect')?.value || 'center',
+        
+        // Animation settings
+        captionAnimation: document.getElementById('captionAnimationSelect')?.value || 'fadeIn',
+        imageTransition: document.getElementById('imageTransitionSelect')?.value || 'zoomIn',
+        videoStyle: document.getElementById('videoStyleSelect')?.value || 'dynamic',
+        
+        // Voice settings
+        voiceSelect: document.getElementById('minimaxVoiceSelect')?.value || 'male-qn-qingse',
+        
+        timestamp: new Date().toISOString()
+    };
+}
+
+function saveCurrentTemplate() {
+    const templateName = document.getElementById('templateNameInput')?.value?.trim();
+    
+    if (!templateName) {
+        alert('⚠️ 템플릿 이름을 입력해주세요.');
+        return;
+    }
+    
+    const settings = getCurrentSettings();
+    const templates = JSON.parse(localStorage.getItem('saved_templates') || '[]');
+    
+    // Check if template name already exists
+    const existingIndex = templates.findIndex(t => t.name === templateName);
+    if (existingIndex >= 0) {
+        if (!confirm(`"${templateName}" 템플릿이 이미 존재합니다. 덮어쓰시겠습니까?`)) {
+            return;
+        }
+        templates[existingIndex] = { name: templateName, settings, savedAt: new Date().toISOString() };
+    } else {
+        templates.push({ name: templateName, settings, savedAt: new Date().toISOString() });
+    }
+    
+    localStorage.setItem('saved_templates', JSON.stringify(templates));
+    
+    // Clear input
+    document.getElementById('templateNameInput').value = '';
+    
+    // Refresh list
+    loadSavedTemplates();
+    
+    alert(`✅ 템플릿 "${templateName}"이 저장되었습니다.`);
+    console.log('💾 Template saved:', templateName);
+}
+
+function saveCurrentTemplateWithTimestamp() {
+    const now = new Date();
+    const templateName = `설정_${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}`;
+    
+    const settings = getCurrentSettings();
+    const templates = JSON.parse(localStorage.getItem('saved_templates') || '[]');
+    
+    templates.push({ name: templateName, settings, savedAt: now.toISOString() });
+    localStorage.setItem('saved_templates', JSON.stringify(templates));
+    
+    // Refresh list
+    loadSavedTemplates();
+    
+    alert(`✅ 템플릿 "${templateName}"이 저장되었습니다.`);
+    console.log('💾 Template auto-saved:', templateName);
+}
+
+function loadSavedTemplates() {
+    const templates = JSON.parse(localStorage.getItem('saved_templates') || '[]');
+    const listContainer = document.getElementById('savedTemplatesList');
+    
+    if (!listContainer) return;
+    
+    if (templates.length === 0) {
+        listContainer.innerHTML = '<p class="text-sm text-gray-500 text-center py-2">저장된 템플릿이 없습니다</p>';
+        return;
+    }
+    
+    listContainer.innerHTML = templates.map((template, index) => `
+        <div class="flex items-center justify-between bg-gray-50 p-2 rounded">
+            <button onclick="applyTemplate(${index})" class="flex-1 text-left text-sm hover:text-blue-600">
+                <i class="fas fa-file-alt mr-1"></i>${template.name}
+            </button>
+            <button onclick="deleteTemplate(${index})" class="text-red-600 hover:text-red-700 px-2">
+                <i class="fas fa-trash"></i>
+            </button>
+        </div>
+    `).join('');
+    
+    console.log('📋 Loaded templates:', templates.length);
+}
+
+function applyTemplate(index) {
+    const templates = JSON.parse(localStorage.getItem('saved_templates') || '[]');
+    const template = templates[index];
+    
+    if (!template) {
+        alert('❌ 템플릿을 찾을 수 없습니다.');
+        return;
+    }
+    
+    const settings = template.settings;
+    
+    // Apply all settings
+    if (settings.font && document.getElementById('fontSelect')) {
+        document.getElementById('fontSelect').value = settings.font;
+    }
+    if (settings.fontSize && document.getElementById('fontSizeSelect')) {
+        document.getElementById('fontSizeSelect').value = settings.fontSize;
+    }
+    if (settings.fontColor && document.getElementById('fontColorSelect')) {
+        document.getElementById('fontColorSelect').value = settings.fontColor;
+    }
+    if (settings.fontWeight && document.getElementById('fontWeightSelect')) {
+        document.getElementById('fontWeightSelect').value = settings.fontWeight;
+    }
+    if (settings.textShadow && document.getElementById('textShadowSelect')) {
+        document.getElementById('textShadowSelect').value = settings.textShadow;
+    }
+    if (settings.captionBg && document.getElementById('captionBgSelect')) {
+        document.getElementById('captionBgSelect').value = settings.captionBg;
+    }
+    if (settings.captionPosition && document.getElementById('captionPositionSelect')) {
+        document.getElementById('captionPositionSelect').value = settings.captionPosition;
+    }
+    if (settings.captionAnimation && document.getElementById('captionAnimationSelect')) {
+        document.getElementById('captionAnimationSelect').value = settings.captionAnimation;
+    }
+    if (settings.imageTransition && document.getElementById('imageTransitionSelect')) {
+        document.getElementById('imageTransitionSelect').value = settings.imageTransition;
+    }
+    if (settings.videoStyle && document.getElementById('videoStyleSelect')) {
+        document.getElementById('videoStyleSelect').value = settings.videoStyle;
+    }
+    if (settings.voiceSelect && document.getElementById('minimaxVoiceSelect')) {
+        document.getElementById('minimaxVoiceSelect').value = settings.voiceSelect;
+    }
+    
+    // Trigger preview update
+    if (typeof setupFontPreview === 'function') {
+        const fontPreviewText = document.getElementById('fontPreviewText');
+        const fontPreview = document.getElementById('fontPreview');
+        if (fontPreviewText && fontPreview) {
+            // Manually trigger update
+            const event = new Event('change');
+            document.getElementById('fontSelect')?.dispatchEvent(event);
+        }
+    }
+    
+    alert(`✅ 템플릿 "${template.name}"이 적용되었습니다.`);
+    console.log('📥 Template applied:', template.name);
+}
+
+function deleteTemplate(index) {
+    const templates = JSON.parse(localStorage.getItem('saved_templates') || '[]');
+    const template = templates[index];
+    
+    if (!confirm(`"${template.name}" 템플릿을 삭제하시겠습니까?`)) {
+        return;
+    }
+    
+    templates.splice(index, 1);
+    localStorage.setItem('saved_templates', JSON.stringify(templates));
+    
+    loadSavedTemplates();
+    
+    alert(`✅ 템플릿 "${template.name}"이 삭제되었습니다.`);
+    console.log('🗑️ Template deleted:', template.name);
+}
+
 // Make functions globally accessible
 window.previewVoice = previewVoice;
 window.onStageChanged = onStageChanged;
@@ -1414,6 +1597,11 @@ window.handleBgImageUpload = handleBgImageUpload;
 window.handleBgMusicUpload = handleBgMusicUpload;
 window.handleBgImageDelete = handleBgImageDelete;
 window.handleBgMusicDelete = handleBgMusicDelete;
+window.saveCurrentTemplate = saveCurrentTemplate;
+window.saveCurrentTemplateWithTimestamp = saveCurrentTemplateWithTimestamp;
+window.loadSavedTemplates = loadSavedTemplates;
+window.applyTemplate = applyTemplate;
+window.deleteTemplate = deleteTemplate;
 
 console.log('✅ Global functions registered');
 // Deployed at: Mon Dec  1 06:20:30 UTC 2025
