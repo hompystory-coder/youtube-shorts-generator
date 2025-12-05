@@ -863,7 +863,14 @@ function populateBgMusicSelect() {
     userBackgroundMusic.forEach(music => {
         const option = document.createElement('option');
         option.value = music.id;
-        option.textContent = `${music.name} (${music.duration || 0}초)`;
+        
+        // Display duration only if available
+        if (music.duration && music.duration > 0) {
+            option.textContent = `${music.name} (${music.duration}초)`;
+        } else {
+            option.textContent = music.name;
+        }
+        
         option.dataset.url = music.url || music.data_url;
         select.appendChild(option);
     });
@@ -949,29 +956,72 @@ async function handleBgMusicUpload(event) {
     reader.onload = async function(e) {
         const dataUrl = e.target.result;
         
-        // Create music object
-        const newMusic = {
-            id: Date.now(),
-            name: file.name,
-            url: dataUrl,
-            data_url: dataUrl,
-            size: file.size,
-            duration: 0, // Duration will be calculated by audio player
-            uploadedAt: new Date().toISOString(),
-            created_at: new Date().toISOString()
-        };
+        // Create temporary audio element to get duration
+        const audio = new Audio();
+        audio.src = dataUrl;
+        
+        // Wait for metadata to load
+        audio.addEventListener('loadedmetadata', function() {
+            const durationInSeconds = Math.round(audio.duration);
+            
+            console.log(`📊 오디오 길이: ${durationInSeconds}초`);
+            
+            // Create music object with actual duration
+            const newMusic = {
+                id: Date.now(),
+                name: file.name,
+                url: dataUrl,
+                data_url: dataUrl,
+                size: file.size,
+                duration: durationInSeconds,
+                uploadedAt: new Date().toISOString(),
+                created_at: new Date().toISOString()
+            };
 
-        // Add to list
-        userBackgroundMusic.push(newMusic);
+            // Add to list
+            userBackgroundMusic.push(newMusic);
+            
+            // Update select dropdown
+            populateBgMusicSelect();
+            
+            // Auto-select the new music
+            document.getElementById('bgMusicSelect').value = newMusic.id;
+            
+            console.log('✅ 배경 음악 추가됨:', newMusic.name);
+            alert(`✅ 배경 음악 "${file.name}" (${durationInSeconds}초)이 추가되었습니다!`);
+        });
         
-        // Update select dropdown
-        populateBgMusicSelect();
+        // Handle error if duration cannot be determined
+        audio.addEventListener('error', function() {
+            console.error('❌ 오디오 길이 측정 실패');
+            
+            // Create music object without duration
+            const newMusic = {
+                id: Date.now(),
+                name: file.name,
+                url: dataUrl,
+                data_url: dataUrl,
+                size: file.size,
+                duration: null,
+                uploadedAt: new Date().toISOString(),
+                created_at: new Date().toISOString()
+            };
+
+            // Add to list
+            userBackgroundMusic.push(newMusic);
+            
+            // Update select dropdown
+            populateBgMusicSelect();
+            
+            // Auto-select the new music
+            document.getElementById('bgMusicSelect').value = newMusic.id;
+            
+            console.log('✅ 배경 음악 추가됨 (길이 측정 실패):', newMusic.name);
+            alert(`✅ 배경 음악 "${file.name}"이 추가되었습니다!`);
+        });
         
-        // Auto-select the new music
-        document.getElementById('bgMusicSelect').value = newMusic.id;
-        
-        console.log('✅ 배경 음악 추가됨:', newMusic.name);
-        alert(`✅ 배경 음악 "${file.name}"이 추가되었습니다!`);
+        // Trigger loading
+        audio.load();
     };
     
     reader.readAsDataURL(file);
