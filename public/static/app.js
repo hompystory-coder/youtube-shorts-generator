@@ -871,12 +871,123 @@ function populateBgMusicSelect() {
     console.log(`✅ Populated ${userBackgroundMusic.length} background music`);
 }
 
+// Background Image Upload Handler
+async function handleBgImageUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    console.log('📤 배경 이미지 업로드:', file.name);
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+        alert('이미지 파일만 업로드할 수 있습니다.');
+        return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+        alert('이미지 파일은 5MB 이하만 업로드할 수 있습니다.');
+        return;
+    }
+
+    // Convert to base64
+    const reader = new FileReader();
+    reader.onload = async function(e) {
+        const dataUrl = e.target.result;
+        
+        // Create image object
+        const newImage = {
+            id: Date.now(),
+            name: file.name,
+            url: dataUrl,
+            data_url: dataUrl,
+            size: file.size,
+            uploadedAt: new Date().toISOString(),
+            created_at: new Date().toISOString()
+        };
+
+        // Add to list
+        userBackgroundImages.push(newImage);
+        
+        // Update select dropdown
+        populateBgImageSelect();
+        
+        // Auto-select the new image
+        document.getElementById('bgImageSelect').value = newImage.id;
+        
+        console.log('✅ 배경 이미지 추가됨:', newImage.name);
+        alert(`✅ 배경 이미지 "${file.name}"가 추가되었습니다!`);
+    };
+    
+    reader.readAsDataURL(file);
+    
+    // Reset file input
+    event.target.value = '';
+}
+
+// Background Music Upload Handler
+async function handleBgMusicUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    console.log('📤 배경 음악 업로드:', file.name);
+
+    // Validate file type
+    if (!file.type.startsWith('audio/')) {
+        alert('음악 파일만 업로드할 수 있습니다.');
+        return;
+    }
+
+    // Validate file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+        alert('음악 파일은 10MB 이하만 업로드할 수 있습니다.');
+        return;
+    }
+
+    // Convert to base64
+    const reader = new FileReader();
+    reader.onload = async function(e) {
+        const dataUrl = e.target.result;
+        
+        // Create music object
+        const newMusic = {
+            id: Date.now(),
+            name: file.name,
+            url: dataUrl,
+            data_url: dataUrl,
+            size: file.size,
+            duration: 0, // Duration will be calculated by audio player
+            uploadedAt: new Date().toISOString(),
+            created_at: new Date().toISOString()
+        };
+
+        // Add to list
+        userBackgroundMusic.push(newMusic);
+        
+        // Update select dropdown
+        populateBgMusicSelect();
+        
+        // Auto-select the new music
+        document.getElementById('bgMusicSelect').value = newMusic.id;
+        
+        console.log('✅ 배경 음악 추가됨:', newMusic.name);
+        alert(`✅ 배경 음악 "${file.name}"이 추가되었습니다!`);
+    };
+    
+    reader.readAsDataURL(file);
+    
+    // Reset file input
+    event.target.value = '';
+}
+
 // Make functions globally accessible
 window.previewVoice = previewVoice;
 window.onStageChanged = onStageChanged;
 window.crawlBlog = crawlBlog;
 window.displayBlogImages = displayBlogImages;
 window.loadUserBackgrounds = loadUserBackgrounds;
+window.handleBgImageUpload = handleBgImageUpload;
+window.handleBgMusicUpload = handleBgMusicUpload;
 
 console.log('✅ Global functions registered');
 // Deployed at: Mon Dec  1 06:20:30 UTC 2025
