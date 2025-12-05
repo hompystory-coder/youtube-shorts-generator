@@ -4,7 +4,16 @@
 export async function onRequestPost(context) {
   try {
     const { request } = context;
-    const { text, voice, apiKey, groupId } = await request.json();
+    
+    // Support both Cloudflare and Express
+    let body;
+    if (request.body && typeof request.body === 'object') {
+      body = request.body; // Express
+    } else {
+      body = await request.json(); // Cloudflare
+    }
+    
+    const { text, voice, apiKey, groupId } = body;
 
     if (!text) {
       return new Response(JSON.stringify({
