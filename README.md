@@ -106,6 +106,7 @@ AI 기반 유튜브 쇼츠 자동 생성 플랫폼
 - ✅ 음악 파일 크기 제한 변경 (10MB → 5MB)
 - ✅ Express/Cloudflare 환경 호환성 개선 (request.headers, request.json)
 - ✅ 음성 미리듣기 (Voice Preview) API 수정 (Express body 파싱 지원)
+- ✅ 자막 폰트 미리보기 기능 추가 (실시간 폰트 변경 미리보기)
 
 ## 🔮 향후 개선 계획
 
