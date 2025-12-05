@@ -90,30 +90,49 @@ function handleLogout() {
 
 // Load uploaded files from localStorage
 function loadUploadedFiles() {
+    console.log('🔄 loadUploadedFiles() 시작...');
+    
     try {
         // Load background images
         const savedImages = localStorage.getItem('uploaded_bg_images');
+        console.log('📦 localStorage.getItem("uploaded_bg_images"):', savedImages ? '데이터 있음' : '데이터 없음');
+        
         if (savedImages) {
             userBackgroundImages = JSON.parse(savedImages);
-            console.log(`📦 LocalStorage에서 배경 이미지 로드: ${userBackgroundImages.length}개`);
-            console.log('📦 로드된 이미지:', userBackgroundImages.map(img => img.name).join(', '));
+            console.log(`✅ LocalStorage에서 배경 이미지 로드: ${userBackgroundImages.length}개`);
+            console.log('✅ 로드된 이미지:', userBackgroundImages.map(img => img.name).join(', '));
             populateBgImageSelect();
         } else {
-            console.log('📦 LocalStorage에 저장된 배경 이미지 없음');
+            console.log('⚠️ LocalStorage에 저장된 배경 이미지 없음');
+            userBackgroundImages = [];
         }
         
         // Load background music
         const savedMusic = localStorage.getItem('uploaded_bg_music');
+        console.log('📦 localStorage.getItem("uploaded_bg_music"):', savedMusic ? '데이터 있음' : '데이터 없음');
+        
         if (savedMusic) {
             userBackgroundMusic = JSON.parse(savedMusic);
-            console.log(`📦 LocalStorage에서 배경 음악 로드: ${userBackgroundMusic.length}개`);
-            console.log('📦 로드된 음악:', userBackgroundMusic.map(m => m.name).join(', '));
+            console.log(`✅ LocalStorage에서 배경 음악 로드: ${userBackgroundMusic.length}개`);
+            console.log('✅ 로드된 음악:', userBackgroundMusic.map(m => m.name).join(', '));
+            console.log('✅ 음악 데이터 상세:', userBackgroundMusic.map(m => ({
+                id: m.id,
+                name: m.name,
+                hasDataUrl: !!m.data_url,
+                dataUrlLength: m.data_url ? m.data_url.length : 0
+            })));
             populateBgMusicSelect();
         } else {
-            console.log('📦 LocalStorage에 저장된 배경 음악 없음');
+            console.log('⚠️ LocalStorage에 저장된 배경 음악 없음');
+            userBackgroundMusic = [];
         }
+        
+        console.log('✅ loadUploadedFiles() 완료');
     } catch (error) {
         console.error('❌ LocalStorage 로드 실패:', error);
+        console.error('❌ 에러 상세:', error.message);
+        userBackgroundImages = [];
+        userBackgroundMusic = [];
     }
 }
 
@@ -154,19 +173,39 @@ function saveUploadedFiles() {
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', async function() {
+    console.log('🎬 ========================================');
     console.log('🎬 Initializing YouTube Shorts Generator...');
+    console.log('🎬 ========================================');
     
     // Check authentication
+    console.log('🔐 Step 1: 인증 확인 중...');
     await checkAuth();
+    console.log('✅ Step 1 완료');
     
     // Load uploaded files from localStorage first
+    console.log('📦 Step 2: LocalStorage에서 파일 로드 중...');
+    console.log('📦 현재 userBackgroundImages 길이:', userBackgroundImages.length);
+    console.log('📦 현재 userBackgroundMusic 길이:', userBackgroundMusic.length);
     loadUploadedFiles();
+    console.log('📦 로드 후 userBackgroundImages 길이:', userBackgroundImages.length);
+    console.log('📦 로드 후 userBackgroundMusic 길이:', userBackgroundMusic.length);
+    console.log('✅ Step 2 완료');
     
     // Load user's background images and music from server
+    console.log('🌐 Step 3: loadUserBackgrounds() 호출 중...');
     await loadUserBackgrounds();
+    console.log('✅ Step 3 완료');
     
     // Setup event listeners
+    console.log('🎯 Step 4: 이벤트 리스너 설정 중...');
     setupEventListeners();
+    console.log('✅ Step 4 완료');
+    
+    console.log('🎬 ========================================');
+    console.log('🎬 초기화 완료!');
+    console.log('🎬 최종 userBackgroundImages:', userBackgroundImages.length, '개');
+    console.log('🎬 최종 userBackgroundMusic:', userBackgroundMusic.length, '개');
+    console.log('🎬 ========================================');
 });
 
 // Setup event listeners
@@ -1010,14 +1049,29 @@ async function handleBgMusicUpload(event) {
         
         // Save to localStorage IMMEDIATELY
         try {
-            localStorage.setItem('uploaded_bg_music', JSON.stringify(userBackgroundMusic));
+            const musicJson = JSON.stringify(userBackgroundMusic);
+            const sizeInMB = (musicJson.length / (1024 * 1024)).toFixed(2);
+            console.log(`📊 저장할 음악 데이터 크기: ${sizeInMB} MB`);
+            
+            localStorage.setItem('uploaded_bg_music', musicJson);
             console.log('💾 LocalStorage에 배경 음악 즉시 저장 완료!');
             
             // Verify save
-            const saved = JSON.parse(localStorage.getItem('uploaded_bg_music') || '[]');
-            console.log('✅ 저장 검증 성공:', saved.length, '개의 음악 파일');
+            const saved = localStorage.getItem('uploaded_bg_music');
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                console.log('✅ 저장 검증 성공:', parsed.length, '개의 음악 파일');
+                console.log('✅ 저장된 음악 파일명:', parsed.map(m => m.name).join(', '));
+            } else {
+                console.error('❌ 저장 검증 실패: localStorage에서 데이터를 읽을 수 없음');
+            }
         } catch (err) {
             console.error('❌ LocalStorage 저장 실패:', err);
+            console.error('❌ 에러 이름:', err.name);
+            console.error('❌ 에러 메시지:', err.message);
+            if (err.name === 'QuotaExceededError') {
+                alert('⚠️ 저장 공간이 부족합니다. 음악 파일이 너무 큽니다.');
+            }
         }
         
         // Update select dropdown
