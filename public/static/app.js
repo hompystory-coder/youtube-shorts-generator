@@ -96,7 +96,10 @@ function loadUploadedFiles() {
         if (savedImages) {
             userBackgroundImages = JSON.parse(savedImages);
             console.log(`📦 LocalStorage에서 배경 이미지 로드: ${userBackgroundImages.length}개`);
+            console.log('📦 로드된 이미지:', userBackgroundImages.map(img => img.name).join(', '));
             populateBgImageSelect();
+        } else {
+            console.log('📦 LocalStorage에 저장된 배경 이미지 없음');
         }
         
         // Load background music
@@ -104,7 +107,10 @@ function loadUploadedFiles() {
         if (savedMusic) {
             userBackgroundMusic = JSON.parse(savedMusic);
             console.log(`📦 LocalStorage에서 배경 음악 로드: ${userBackgroundMusic.length}개`);
+            console.log('📦 로드된 음악:', userBackgroundMusic.map(m => m.name).join(', '));
             populateBgMusicSelect();
+        } else {
+            console.log('📦 LocalStorage에 저장된 배경 음악 없음');
         }
     } catch (error) {
         console.error('❌ LocalStorage 로드 실패:', error);
@@ -117,8 +123,19 @@ function saveUploadedFiles() {
         localStorage.setItem('uploaded_bg_images', JSON.stringify(userBackgroundImages));
         localStorage.setItem('uploaded_bg_music', JSON.stringify(userBackgroundMusic));
         console.log('💾 LocalStorage에 저장 완료');
+        console.log('💾 저장된 이미지:', userBackgroundImages.length + '개');
+        console.log('💾 저장된 음악:', userBackgroundMusic.length + '개');
+        
+        // 저장 확인
+        const verify = localStorage.getItem('uploaded_bg_images');
+        if (verify) {
+            console.log('✅ 저장 검증 성공');
+        } else {
+            console.error('❌ 저장 검증 실패 - 데이터가 없음');
+        }
     } catch (error) {
         console.error('❌ LocalStorage 저장 실패:', error);
+        console.error('에러 상세:', error.message);
     }
 }
 
@@ -829,60 +846,15 @@ function displayBlogImages(images) {
 
 // Load user's background images and music from API
 async function loadUserBackgrounds() {
-    const userInfo = localStorage.getItem('user_info');
-    if (!userInfo) {
-        console.log('⚠️ No user info, skipping background load');
-        return;
-    }
+    // localStorage만 사용 - 서버 데이터는 로드하지 않음
+    console.log('✅ Using localStorage only for backgrounds');
+    console.log('📦 Background images:', userBackgroundImages.length);
+    console.log('📦 Background music:', userBackgroundMusic.length);
     
-    const user = JSON.parse(userInfo);
-    const userId = user.id;
-    const token = localStorage.getItem('jwt_token') || localStorage.getItem('auth_token');
-    
-    try {
-        // Load from Settings API (includes background images and music)
-        const settingsResponse = await fetch(`${API_BASE}/api/settings/${userId}`, {
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
-        });
-        
-        if (settingsResponse.ok) {
-            const settingsData = await settingsResponse.json();
-            if (settingsData.success && settingsData.data) {
-                // Merge server data with localStorage data (keep localStorage priority)
-                const serverImages = settingsData.data.background_images || [];
-                const serverMusic = settingsData.data.background_music || [];
-                
-                // Add server images only if they don't exist in localStorage
-                serverImages.forEach(serverImg => {
-                    const exists = userBackgroundImages.some(localImg => localImg.id === serverImg.id);
-                    if (!exists) {
-                        userBackgroundImages.push(serverImg);
-                    }
-                });
-                
-                // Add server music only if they don't exist in localStorage
-                serverMusic.forEach(serverMusic => {
-                    const exists = userBackgroundMusic.some(localMusic => localMusic.id === serverMusic.id);
-                    if (!exists) {
-                        userBackgroundMusic.push(serverMusic);
-                    }
-                });
-                
-                console.log('✅ Merged background images:', userBackgroundImages.length);
-                console.log('✅ Merged background music:', userBackgroundMusic.length);
-                
-                // Update dropdowns
-                populateBgImageSelect();
-                populateBgMusicSelect();
-            }
-        } else {
-            console.error('❌ Failed to load settings:', settingsResponse.status);
-        }
-    } catch (error) {
-        console.error('❌ Error loading backgrounds:', error);
-    }
+    // 이미 loadUploadedFiles()에서 로드되었으므로 추가 작업 불필요
+    // 드롭다운만 다시 업데이트
+    populateBgImageSelect();
+    populateBgMusicSelect();
 }
 
 // Populate background image select dropdown
