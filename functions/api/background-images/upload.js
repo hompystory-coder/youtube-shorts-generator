@@ -1,12 +1,19 @@
 // Background Images Upload API - POST endpoint
 // Handles background image file uploads
 
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// Only import fs/path in Node.js environment
+let fs, path, fileURLToPath, __dirname;
+if (typeof process !== 'undefined' && process.versions && process.versions.node) {
+  // Running in Node.js (Express server)
+  const fsModule = await import('fs');
+  const pathModule = await import('path');
+  const urlModule = await import('url');
+  fs = fsModule.default;
+  path = pathModule.default;
+  fileURLToPath = urlModule.fileURLToPath;
+  const __filename = fileURLToPath(import.meta.url);
+  __dirname = path.dirname(__filename);
+}
 
 export async function onRequestPost(context) {
   try {
@@ -60,8 +67,22 @@ export async function onRequestPost(context) {
     console.log('[Background Images Upload] Uploading:', fileName);
     
     // Extract base64 data
-    const base64Data = dataUrl.replace(/^data:image\/\w+;base64,/, '');
+    const base64Data = dataUrl.replace(/^data:image\/[^;]+;base64,/, '');
     const buffer = Buffer.from(base64Data, 'base64');
+    
+    // Check if we're in Node.js environment (Express server)
+    if (!fs || !path || !__dirname) {
+      return new Response(JSON.stringify({
+        success: false,
+        message: 'File upload is only available on the server environment'
+      }), {
+        status: 503,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        }
+      });
+    }
     
     // Generate unique filename
     const timestamp = Date.now();
@@ -72,15 +93,19 @@ export async function onRequestPost(context) {
     const uploadsDir = path.join(__dirname, '../../../public/uploads/images');
     const filePath = path.join(uploadsDir, uniqueFileName);
     
+    console.log('[Background Images Upload] Saving to:', filePath);
+    console.log('[Background Images Upload] Uploads dir:', uploadsDir);
+    
     // Ensure directory exists
     if (!fs.existsSync(uploadsDir)) {
       fs.mkdirSync(uploadsDir, { recursive: true });
+      console.log('[Background Images Upload] Created directory:', uploadsDir);
     }
     
     // Write file
     fs.writeFileSync(filePath, buffer);
     
-    console.log('[Background Images Upload] Saved to:', filePath);
+    console.log('[Background Images Upload] File saved successfully');
     
     // Return result with server URL
     const uploadResult = {
@@ -106,9 +131,11 @@ export async function onRequestPost(context) {
     
   } catch (error) {
     console.error('[Background Images Upload] Error:', error);
+    console.error('[Background Images Upload] Error stack:', error.stack);
     return new Response(JSON.stringify({
       success: false,
-      error: error.message
+      error: error.message,
+      details: error.stack
     }), {
       status: 500,
       headers: {
