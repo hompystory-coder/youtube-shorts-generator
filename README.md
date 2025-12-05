@@ -104,6 +104,8 @@ AI 기반 유튜브 쇼츠 자동 생성 플랫폼
 - ✅ localStorage 용량 제한 문제 해결 (5-10MB → 무제한, 서버 저장)
 - ✅ 파일 업로드 개수 제한 추가 (이미지/음악 각 5개)
 - ✅ 음악 파일 크기 제한 변경 (10MB → 5MB)
+- ✅ Express/Cloudflare 환경 호환성 개선 (request.headers, request.json)
+- ✅ 음성 미리듣기 (Voice Preview) API 수정 (Express body 파싱 지원)
 
 ## 🔮 향후 개선 계획
 
