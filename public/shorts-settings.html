@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>쇼츠 설정 - 실시간 미리보기</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Google Fonts - Korean subset -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&family=Black+Han+Sans&family=Jua&family=Gamja+Flower&family=Do+Hyeon&family=Nanum+Gothic:wght@700;800&display=swap&subset=korean" rel="stylesheet">
+    
+    <style>
+        /* 쇼츠 미리보기 비율 (9:16) */
+        .shorts-preview {
+            aspect-ratio: 9 / 16;
+            max-height: 80vh;
+            background: #000;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* 자막 스타일 */
+        .subtitle-text {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            line-height: 1.3;
+            padding: 0 20px;
+            width: 100%;
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+        }
+        
+        /* 배경 이미지 */
+        .preview-background {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        
+        /* 텍스트 그림자 프리셋 */
+        .shadow-none { text-shadow: none; }
+        .shadow-light { text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+        .shadow-medium { text-shadow: 2px 2px 8px rgba(0,0,0,0.5); }
+        .shadow-strong { text-shadow: 3px 3px 12px rgba(0,0,0,0.8); }
+        .shadow-outline { text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; }
+        
+        /* 텍스트 배경 */
+        .text-bg {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 4px;
+        }
+        
+        /* 스크롤바 스타일링 */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-purple-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <div class="mb-6">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-800 mb-2">
+                        <i class="fas fa-cog mr-3 text-blue-600"></i>
+                        쇼츠 설정
+                    </h1>
+                    <p class="text-gray-600">설정을 변경하면 오른쪽 미리보기에서 실시간으로 확인할 수 있습니다</p>
+                </div>
+                <a href="/" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    돌아가기
+                </a>
+            </div>
+        </div>
+
+        <!-- 메인 컨텐츠 -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- 왼쪽: 설정 패널 -->
+            <div class="space-y-6 custom-scrollbar" style="max-height: 85vh; overflow-y: auto;">
+                
+                <!-- 자막 설정 -->
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                        <i class="fas fa-text-height mr-2 text-blue-600"></i>
+                        자막 설정
+                    </h2>
+                    
+                    <!-- 폰트 선택 -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">폰트</label>
+                        <select id="fontFamily" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            <option value="'Noto Sans KR', sans-serif">Noto Sans KR (기본)</option>
+                            <option value="'Black Han Sans', sans-serif">Black Han Sans (굵은)</option>
+                            <option value="'Jua', sans-serif">Jua (둥근)</option>
+                            <option value="'Gamja Flower', cursive">Gamja Flower (귀여운)</option>
+                            <option value="'Do Hyeon', sans-serif">Do Hyeon (깔끔)</option>
+                            <option value="'Nanum Gothic', sans-serif">Nanum Gothic (고딕)</option>
+                        </select>
+                    </div>
+                    
+                    <!-- 폰트 크기 -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            폰트 크기: <span id="fontSizeValue">48px</span>
+                        </label>
+                        <input type="range" id="fontSize" min="24" max="80" value="48" 
+                            class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                    </div>
+                    
+                    <!-- 폰트 두께 -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            폰트 두께: <span id="fontWeightValue">700</span>
+                        </label>
+                        <input type="range" id="fontWeight" min="400" max="900" step="100" value="700" 
+                            class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                    </div>
+                    
+                    <!-- 자막 색상 -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">자막 색상</label>
+                        <div class="flex gap-2 items-center">
+                            <input type="color" id="subtitleColor" value="#FFFFFF" 
+                                class="w-12 h-10 rounded cursor-pointer">
+                            <input type="text" id="subtitleColorHex" value="#FFFFFF" 
+                                class="flex-1 px-4 py-2 border border-gray-300 rounded-lg">
+                        </div>
+                    </div>
+                    
+                    <!-- 자막 위치 -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            자막 위치 (상단으로부터): <span id="subtitlePositionValue">60%</span>
+                        </label>
+                        <input type="range" id="subtitlePosition" min="10" max="90" value="60" 
+                            class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                    </div>
+                    
+                    <!-- 텍스트 그림자 -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">텍스트 그림자</label>
+                        <select id="textShadow" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            <option value="shadow-medium">중간 (기본)</option>
+                            <option value="shadow-none">없음</option>
+                            <option value="shadow-light">약함</option>
+                            <option value="shadow-strong">강함</option>
+                            <option value="shadow-outline">외곽선</option>
+                        </select>
+                    </div>
+                    
+                    <!-- 텍스트 배경 -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">텍스트 배경</label>
+                        <div class="flex items-center gap-4 mb-2">
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" id="textBgEnabled" class="w-4 h-4">
+                                <span>배경 활성화</span>
+                            </label>
+                        </div>
+                        <div id="textBgOptions" class="hidden space-y-2">
+                            <div class="flex gap-2 items-center">
+                                <label class="text-sm">배경 색상</label>
+                                <input type="color" id="textBgColor" value="#000000" 
+                                    class="w-12 h-10 rounded cursor-pointer">
+                                <input type="text" id="textBgColorHex" value="#000000" 
+                                    class="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-sm mb-1">
+                                    투명도: <span id="textBgOpacityValue">0.5</span>
+                                </label>
+                                <input type="range" id="textBgOpacity" min="0" max="1" step="0.1" value="0.5" 
+                                    class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 샘플 텍스트 -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">미리보기 텍스트</label>
+                        <textarea id="sampleText" rows="3" 
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                            placeholder="미리보기할 자막 텍스트를 입력하세요">안녕하세요!
+이것은 쇼츠 자막입니다
+설정을 변경해보세요</textarea>
+                    </div>
+                </div>
+
+                <!-- 배경 설정 -->
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                        <i class="fas fa-image mr-2 text-green-600"></i>
+                        배경 설정
+                    </h2>
+                    
+                    <!-- 배경 타입 선택 -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">배경 타입</label>
+                        <div class="grid grid-cols-3 gap-2">
+                            <button onclick="setBackgroundType('color')" 
+                                class="px-4 py-2 border-2 border-gray-300 rounded-lg hover:border-blue-500 transition bg-type-btn" 
+                                data-type="color">
+                                <i class="fas fa-palette"></i> 색상
+                            </button>
+                            <button onclick="setBackgroundType('gradient')" 
+                                class="px-4 py-2 border-2 border-gray-300 rounded-lg hover:border-blue-500 transition bg-type-btn" 
+                                data-type="gradient">
+                                <i class="fas fa-brush"></i> 그라데이션
+                            </button>
+                            <button onclick="setBackgroundType('image')" 
+                                class="px-4 py-2 border-2 border-blue-500 rounded-lg bg-blue-50 transition bg-type-btn" 
+                                data-type="image">
+                                <i class="fas fa-image"></i> 이미지
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- 배경 색상 -->
+                    <div id="bgColorOptions" class="hidden mb-4">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">배경 색상</label>
+                        <div class="flex gap-2 items-center">
+                            <input type="color" id="bgColor" value="#000000" 
+                                class="w-12 h-10 rounded cursor-pointer">
+                            <input type="text" id="bgColorHex" value="#000000" 
+                                class="flex-1 px-4 py-2 border border-gray-300 rounded-lg">
+                        </div>
+                    </div>
+                    
+                    <!-- 그라데이션 설정 -->
+                    <div id="bgGradientOptions" class="hidden mb-4">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">그라데이션</label>
+                        <div class="space-y-2">
+                            <div class="flex gap-2">
+                                <input type="color" id="gradientColor1" value="#667eea" class="w-12 h-10 rounded cursor-pointer">
+                                <input type="color" id="gradientColor2" value="#764ba2" class="w-12 h-10 rounded cursor-pointer">
+                            </div>
+                            <select id="gradientDirection" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                                <option value="to bottom">위에서 아래로</option>
+                                <option value="to top">아래에서 위로</option>
+                                <option value="to right">왼쪽에서 오른쪽</option>
+                                <option value="to left">오른쪽에서 왼쪽</option>
+                                <option value="to bottom right">대각선 ↘</option>
+                                <option value="to bottom left">대각선 ↙</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- 이미지 업로드 -->
+                    <div id="bgImageOptions" class="mb-4">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">배경 이미지</label>
+                        <input type="file" id="bgImageUpload" accept="image/*" 
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg cursor-pointer">
+                        <p class="text-xs text-gray-500 mt-1">권장: 1080x1920 (9:16 비율)</p>
+                    </div>
+                </div>
+
+                <!-- 배경음악 설정 -->
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                        <i class="fas fa-music mr-2 text-purple-600"></i>
+                        배경음악 설정
+                    </h2>
+                    
+                    <div class="mb-4">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">배경음악</label>
+                        <input type="file" id="bgMusicUpload" accept="audio/*" 
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg cursor-pointer">
+                    </div>
+                    
+                    <!-- 음악 컨트롤 -->
+                    <div id="musicControls" class="hidden">
+                        <div class="flex items-center gap-2 mb-2">
+                            <button id="playPauseBtn" onclick="toggleMusic()" 
+                                class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition">
+                                <i class="fas fa-play"></i> 재생
+                            </button>
+                            <button onclick="stopMusic()" 
+                                class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition">
+                                <i class="fas fa-stop"></i> 정지
+                            </button>
+                        </div>
+                        <div>
+                            <label class="block text-sm mb-1">
+                                음량: <span id="volumeValue">50%</span>
+                            </label>
+                            <input type="range" id="musicVolume" min="0" max="100" value="50" 
+                                class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 저장 버튼 -->
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <button onclick="saveSettings()" 
+                        class="w-full px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition text-lg font-semibold">
+                        <i class="fas fa-save mr-2"></i>
+                        설정 저장
+                    </button>
+                    <p class="text-xs text-gray-500 text-center mt-2">설정이 브라우저에 저장됩니다</p>
+                </div>
+            </div>
+
+            <!-- 오른쪽: 쇼츠 미리보기 -->
+            <div class="sticky top-8">
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                        <i class="fas fa-eye mr-2 text-red-600"></i>
+                        실시간 미리보기
+                    </h2>
+                    
+                    <div class="flex justify-center">
+                        <div id="shortsPreview" class="shorts-preview rounded-lg overflow-hidden shadow-2xl">
+                            <!-- 배경 -->
+                            <div id="previewBg" class="preview-background" style="background: #000;"></div>
+                            
+                            <!-- 자막 -->
+                            <div id="previewSubtitle" class="subtitle-text shadow-medium" 
+                                style="top: 60%; color: #FFFFFF; font-size: 48px; font-weight: 700; font-family: 'Noto Sans KR', sans-serif;">
+                                안녕하세요!<br>이것은 쇼츠 자막입니다<br>설정을 변경해보세요
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 미리보기 정보 -->
+                    <div class="mt-4 text-center text-sm text-gray-600">
+                        <p><i class="fas fa-info-circle mr-1"></i> 비율: 9:16 (1080x1920)</p>
+                        <p class="text-xs text-gray-500 mt-1">실제 쇼츠 영상과 동일한 비율입니다</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 전역 변수
+        let currentBgType = 'image';
+        let audioElement = null;
+
+        // 초기화
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSettings();
+            setupEventListeners();
+        });
+
+        // 이벤트 리스너 설정
+        function setupEventListeners() {
+            // 폰트 설정
+            document.getElementById('fontFamily').addEventListener('change', updatePreview);
+            document.getElementById('fontSize').addEventListener('input', function(e) {
+                document.getElementById('fontSizeValue').textContent = e.target.value + 'px';
+                updatePreview();
+            });
+            document.getElementById('fontWeight').addEventListener('input', function(e) {
+                document.getElementById('fontWeightValue').textContent = e.target.value;
+                updatePreview();
+            });
+            
+            // 색상 설정
+            document.getElementById('subtitleColor').addEventListener('input', function(e) {
+                document.getElementById('subtitleColorHex').value = e.target.value;
+                updatePreview();
+            });
+            document.getElementById('subtitleColorHex').addEventListener('input', function(e) {
+                document.getElementById('subtitleColor').value = e.target.value;
+                updatePreview();
+            });
+            
+            // 위치 설정
+            document.getElementById('subtitlePosition').addEventListener('input', function(e) {
+                document.getElementById('subtitlePositionValue').textContent = e.target.value + '%';
+                updatePreview();
+            });
+            
+            // 그림자 설정
+            document.getElementById('textShadow').addEventListener('change', updatePreview);
+            
+            // 텍스트 배경
+            document.getElementById('textBgEnabled').addEventListener('change', function(e) {
+                const options = document.getElementById('textBgOptions');
+                options.classList.toggle('hidden', !e.target.checked);
+                updatePreview();
+            });
+            document.getElementById('textBgColor').addEventListener('input', function(e) {
+                document.getElementById('textBgColorHex').value = e.target.value;
+                updatePreview();
+            });
+            document.getElementById('textBgColorHex').addEventListener('input', function(e) {
+                document.getElementById('textBgColor').value = e.target.value;
+                updatePreview();
+            });
+            document.getElementById('textBgOpacity').addEventListener('input', function(e) {
+                document.getElementById('textBgOpacityValue').textContent = e.target.value;
+                updatePreview();
+            });
+            
+            // 샘플 텍스트
+            document.getElementById('sampleText').addEventListener('input', updatePreview);
+            
+            // 배경 색상
+            document.getElementById('bgColor').addEventListener('input', function(e) {
+                document.getElementById('bgColorHex').value = e.target.value;
+                updatePreview();
+            });
+            document.getElementById('bgColorHex').addEventListener('input', function(e) {
+                document.getElementById('bgColor').value = e.target.value;
+                updatePreview();
+            });
+            
+            // 그라데이션
+            document.getElementById('gradientColor1').addEventListener('input', updatePreview);
+            document.getElementById('gradientColor2').addEventListener('input', updatePreview);
+            document.getElementById('gradientDirection').addEventListener('change', updatePreview);
+            
+            // 이미지 업로드
+            document.getElementById('bgImageUpload').addEventListener('change', handleImageUpload);
+            
+            // 배경음악
+            document.getElementById('bgMusicUpload').addEventListener('change', handleMusicUpload);
+            document.getElementById('musicVolume').addEventListener('input', function(e) {
+                document.getElementById('volumeValue').textContent = e.target.value + '%';
+                if (audioElement) {
+                    audioElement.volume = e.target.value / 100;
+                }
+            });
+        }
+
+        // 미리보기 업데이트
+        function updatePreview() {
+            const subtitle = document.getElementById('previewSubtitle');
+            const bg = document.getElementById('previewBg');
+            
+            // 폰트 설정
+            const fontFamily = document.getElementById('fontFamily').value;
+            const fontSize = document.getElementById('fontSize').value + 'px';
+            const fontWeight = document.getElementById('fontWeight').value;
+            const color = document.getElementById('subtitleColor').value;
+            const position = document.getElementById('subtitlePosition').value + '%';
+            const shadowClass = document.getElementById('textShadow').value;
+            const sampleText = document.getElementById('sampleText').value;
+            
+            subtitle.style.fontFamily = fontFamily;
+            subtitle.style.fontSize = fontSize;
+            subtitle.style.fontWeight = fontWeight;
+            subtitle.style.color = color;
+            subtitle.style.top = position;
+            
+            // 그림자 클래스 업데이트
+            subtitle.className = 'subtitle-text ' + shadowClass;
+            
+            // 텍스트 배경
+            const textBgEnabled = document.getElementById('textBgEnabled').checked;
+            if (textBgEnabled) {
+                const bgColor = document.getElementById('textBgColor').value;
+                const opacity = document.getElementById('textBgOpacity').value;
+                subtitle.classList.add('text-bg');
+                subtitle.style.backgroundColor = bgColor + Math.round(opacity * 255).toString(16).padStart(2, '0');
+            } else {
+                subtitle.classList.remove('text-bg');
+                subtitle.style.backgroundColor = 'transparent';
+            }
+            
+            // 텍스트 업데이트
+            subtitle.innerHTML = sampleText.replace(/\n/g, '<br>');
+            
+            // 배경 업데이트
+            updateBackground();
+        }
+
+        // 배경 업데이트
+        function updateBackground() {
+            const bg = document.getElementById('previewBg');
+            
+            if (currentBgType === 'color') {
+                const color = document.getElementById('bgColor').value;
+                bg.style.background = color;
+                bg.style.backgroundImage = 'none';
+            } else if (currentBgType === 'gradient') {
+                const color1 = document.getElementById('gradientColor1').value;
+                const color2 = document.getElementById('gradientColor2').value;
+                const direction = document.getElementById('gradientDirection').value;
+                bg.style.background = `linear-gradient(${direction}, ${color1}, ${color2})`;
+                bg.style.backgroundImage = `linear-gradient(${direction}, ${color1}, ${color2})`;
+            }
+            // image 타입은 handleImageUpload에서 처리
+        }
+
+        // 배경 타입 변경
+        function setBackgroundType(type) {
+            currentBgType = type;
+            
+            // 버튼 스타일 업데이트
+            document.querySelectorAll('.bg-type-btn').forEach(btn => {
+                if (btn.dataset.type === type) {
+                    btn.classList.add('border-blue-500', 'bg-blue-50');
+                    btn.classList.remove('border-gray-300');
+                } else {
+                    btn.classList.remove('border-blue-500', 'bg-blue-50');
+                    btn.classList.add('border-gray-300');
+                }
+            });
+            
+            // 옵션 표시/숨김
+            document.getElementById('bgColorOptions').classList.toggle('hidden', type !== 'color');
+            document.getElementById('bgGradientOptions').classList.toggle('hidden', type !== 'gradient');
+            document.getElementById('bgImageOptions').classList.toggle('hidden', type !== 'image');
+            
+            updatePreview();
+        }
+
+        // 이미지 업로드 처리
+        function handleImageUpload(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const bg = document.getElementById('previewBg');
+                    bg.style.backgroundImage = `url(${event.target.result})`;
+                    bg.style.backgroundSize = 'cover';
+                    bg.style.backgroundPosition = 'center';
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // 배경음악 업로드 처리
+        function handleMusicUpload(e) {
+            const file = e.target.files[0];
+            if (file) {
+                if (audioElement) {
+                    audioElement.pause();
+                }
+                
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    audioElement = new Audio(event.target.result);
+                    audioElement.volume = document.getElementById('musicVolume').value / 100;
+                    audioElement.loop = true;
+                    
+                    document.getElementById('musicControls').classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // 음악 재생/일시정지
+        function toggleMusic() {
+            if (!audioElement) return;
+            
+            const btn = document.getElementById('playPauseBtn');
+            if (audioElement.paused) {
+                audioElement.play();
+                btn.innerHTML = '<i class="fas fa-pause"></i> 일시정지';
+            } else {
+                audioElement.pause();
+                btn.innerHTML = '<i class="fas fa-play"></i> 재생';
+            }
+        }
+
+        // 음악 정지
+        function stopMusic() {
+            if (!audioElement) return;
+            
+            audioElement.pause();
+            audioElement.currentTime = 0;
+            document.getElementById('playPauseBtn').innerHTML = '<i class="fas fa-play"></i> 재생';
+        }
+
+        // 설정 저장
+        function saveSettings() {
+            const settings = {
+                fontFamily: document.getElementById('fontFamily').value,
+                fontSize: document.getElementById('fontSize').value,
+                fontWeight: document.getElementById('fontWeight').value,
+                subtitleColor: document.getElementById('subtitleColor').value,
+                subtitlePosition: document.getElementById('subtitlePosition').value,
+                textShadow: document.getElementById('textShadow').value,
+                textBgEnabled: document.getElementById('textBgEnabled').checked,
+                textBgColor: document.getElementById('textBgColor').value,
+                textBgOpacity: document.getElementById('textBgOpacity').value,
+                bgType: currentBgType,
+                bgColor: document.getElementById('bgColor').value,
+                gradientColor1: document.getElementById('gradientColor1').value,
+                gradientColor2: document.getElementById('gradientColor2').value,
+                gradientDirection: document.getElementById('gradientDirection').value,
+                musicVolume: document.getElementById('musicVolume').value
+            };
+            
+            localStorage.setItem('shortsSettings', JSON.stringify(settings));
+            
+            alert('✅ 설정이 저장되었습니다!');
+        }
+
+        // 설정 불러오기
+        function loadSettings() {
+            const saved = localStorage.getItem('shortsSettings');
+            if (saved) {
+                try {
+                    const settings = JSON.parse(saved);
+                    
+                    // 설정 적용
+                    if (settings.fontFamily) document.getElementById('fontFamily').value = settings.fontFamily;
+                    if (settings.fontSize) {
+                        document.getElementById('fontSize').value = settings.fontSize;
+                        document.getElementById('fontSizeValue').textContent = settings.fontSize + 'px';
+                    }
+                    if (settings.fontWeight) {
+                        document.getElementById('fontWeight').value = settings.fontWeight;
+                        document.getElementById('fontWeightValue').textContent = settings.fontWeight;
+                    }
+                    if (settings.subtitleColor) {
+                        document.getElementById('subtitleColor').value = settings.subtitleColor;
+                        document.getElementById('subtitleColorHex').value = settings.subtitleColor;
+                    }
+                    if (settings.subtitlePosition) {
+                        document.getElementById('subtitlePosition').value = settings.subtitlePosition;
+                        document.getElementById('subtitlePositionValue').textContent = settings.subtitlePosition + '%';
+                    }
+                    if (settings.textShadow) document.getElementById('textShadow').value = settings.textShadow;
+                    if (settings.textBgEnabled !== undefined) {
+                        document.getElementById('textBgEnabled').checked = settings.textBgEnabled;
+                        document.getElementById('textBgOptions').classList.toggle('hidden', !settings.textBgEnabled);
+                    }
+                    if (settings.textBgColor) {
+                        document.getElementById('textBgColor').value = settings.textBgColor;
+                        document.getElementById('textBgColorHex').value = settings.textBgColor;
+                    }
+                    if (settings.textBgOpacity) {
+                        document.getElementById('textBgOpacity').value = settings.textBgOpacity;
+                        document.getElementById('textBgOpacityValue').textContent = settings.textBgOpacity;
+                    }
+                    if (settings.bgType) {
+                        setBackgroundType(settings.bgType);
+                    }
+                    if (settings.bgColor) {
+                        document.getElementById('bgColor').value = settings.bgColor;
+                        document.getElementById('bgColorHex').value = settings.bgColor;
+                    }
+                    if (settings.gradientColor1) document.getElementById('gradientColor1').value = settings.gradientColor1;
+                    if (settings.gradientColor2) document.getElementById('gradientColor2').value = settings.gradientColor2;
+                    if (settings.gradientDirection) document.getElementById('gradientDirection').value = settings.gradientDirection;
+                    if (settings.musicVolume) {
+                        document.getElementById('musicVolume').value = settings.musicVolume;
+                        document.getElementById('volumeValue').textContent = settings.musicVolume + '%';
+                    }
+                    
+                    updatePreview();
+                } catch (e) {
+                    console.error('설정 로드 실패:', e);
+                }
+            }
+        }
+    </script>
+</body>
+</html>
