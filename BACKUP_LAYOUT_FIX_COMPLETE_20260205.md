@@ -2,8 +2,8 @@
 
 ## 백업 정보
 
-- **파일명**: `layout_fix_complete_20260205.tar.gz`
-- **위치**: `/home/azamans/layout_fix_complete_20260205.tar.gz`
+- **파일명**: `shorts_layout_fix_complete_20260205.tar.gz`
+- **위치**: `/home/azamans/shorts_layout_fix_complete_20260205.tar.gz`
 - **크기**: 122 MB
 - **생성 시각**: 2026-02-05 16:12 KST
 - **MD5**: `8ada81b772663e620cbea64ce2fc5c29`
@@ -76,7 +76,7 @@ useEffect(() => {
 ### 1. 백업 파일 압축 해제
 ```bash
 cd /home
-tar -xzf /home/azamans/layout_fix_complete_20260205.tar.gz
+tar -xzf /home/azamans/shorts_layout_fix_complete_20260205.tar.gz
 ```
 
 ### 2. 권한 설정
@@ -104,13 +104,13 @@ nohup node frontend-server.js > frontend-server.log 2>&1 &
 
 ### 1. 파일 확인
 ```bash
-ls -lh /home/azamans/layout_fix_complete_20260205.tar.gz
-tar -tzf /home/azamans/layout_fix_complete_20260205.tar.gz | head -20
+ls -lh /home/azamans/shorts_layout_fix_complete_20260205.tar.gz
+tar -tzf /home/azamans/shorts_layout_fix_complete_20260205.tar.gz | head -20
 ```
 
 ### 2. MD5 체크섬 확인
 ```bash
-md5sum /home/azamans/layout_fix_complete_20260205.tar.gz
+md5sum /home/azamans/shorts_layout_fix_complete_20260205.tar.gz
 # 예상: 8ada81b772663e620cbea64ce2fc5c29
 ```
 
@@ -149,7 +149,7 @@ md5sum /home/azamans/layout_fix_complete_20260205.tar.gz
 |-----------|------|------|------------|
 | `shorts_layout_fix_20260205_145936.tar.gz` | 2026-02-05 14:59 | 122M | sticky만 적용 |
 | `shorts_layout_fix2_20260205.tar.gz` | 2026-02-05 15:10 | 122M | Scene Count 이동 |
-| **`layout_fix_complete_20260205.tar.gz`** | **2026-02-05 16:12** | **122M** | **스크롤 애니메이션 완성** ✅ |
+| **`shorts_layout_fix_complete_20260205.tar.gz`** | **2026-02-05 16:12** | **122M** | **스크롤 애니메이션 완성** ✅ |
 
 ---
 
