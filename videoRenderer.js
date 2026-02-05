@@ -1046,7 +1046,52 @@ class VideoRenderer {
    * 모든 장면 비디오를 하나로 결합
    * 배경 음악 추가 지원
    */
-  async concatenateScenes(scenePaths, settings = {}) {
+  /**
+   * 오디오 파일들을 하나로 결합
+   */
+  async concatenateAudioFiles(audioFiles, outputPath) {
+    return new Promise((resolve, reject) => {
+      console.log(`🎵 ${audioFiles.length}개의 오디오 파일 결합 중...`);
+      
+      // FFmpeg filter complex로 오디오 결합
+      const inputs = audioFiles.map(file => `-i ${file}`).join(' ');
+      const filterComplex = audioFiles.map((_, i) => `[${i}:a]`).join('') + `concat=n=${audioFiles.length}:v=0:a=1[outa]`;
+      
+      const ffmpegCmd = `ffmpeg -y ${inputs} -filter_complex ${filterComplex} -map [outa] ${outputPath}`;
+      
+      const ffmpeg = spawn('ffmpeg', [
+        '-y',
+        ...audioFiles.flatMap(file => ['-i', file]),
+        '-filter_complex',
+        filterComplex,
+        '-map', '[outa]',
+        outputPath
+      ]);
+      
+      let stderr = '';
+      
+      ffmpeg.stderr.on('data', (data) => {
+        stderr += data.toString();
+      });
+      
+      ffmpeg.on('close', (code) => {
+        if (code === 0) {
+          console.log(`✅ 오디오 결합 완료: ${outputPath}`);
+          resolve(outputPath);
+        } else {
+          console.error(`❌ 오디오 결합 실패:`, stderr);
+          reject(new Error(`FFmpeg exited with code ${code}`));
+        }
+      });
+      
+      ffmpeg.on('error', (error) => {
+        console.error(`❌ FFmpeg 실행 오류:`, error);
+        reject(error);
+      });
+    });
+  }
+
+    async concatenateScenes(scenePaths, settings = {}) {
     const videoId = `video_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
     const outputPath = path.join(OUTPUT_DIR, `${videoId}.mp4`);
     const concatListPath = path.join(TEMP_DIR, `${videoId}_concat.txt`);
@@ -1372,11 +1417,29 @@ class VideoRenderer {
         tempDir
       );
       
-      // 오디오 파일 준비
-      const audioPath = scenes[0]?.audioPath || null;
-      if (!audioPath) {
-        throw new Error('오디오 파일이 없습니다');
+      // 오디오 파일 생성 (각 장면의 오디오를 합치기)
+      console.log('🎵 장면별 오디오 생성 중...');
+      const audioFiles = [];
+      for (let i = 0; i < scenes.length; i++) {
+        const scene = scenes[i];
+        if (scene.audioPath && scene.audioPath.trim() !== '') {
+          audioFiles.push(scene.audioPath);
+        } else {
+          console.warn(`⚠️  장면 ${i + 1}에 오디오 경로가 없습니다`);
+        }
       }
+      
+      if (audioFiles.length === 0) {
+        throw new Error('생성된 오디오 파일이 없습니다. TTS 생성을 먼저 완료해주세요.');
+      }
+      
+      console.log(`✅ 총 ${audioFiles.length}개의 오디오 파일 발견`);
+      
+      // 오디오 파일들을 하나로 합치기
+      const combinedAudioPath = path.join(tempDir, 'combined_audio.mp3');
+      await this.concatenateAudioFiles(audioFiles, combinedAudioPath);
+      const audioPath = combinedAudioPath;
+      console.log(`✅ 오디오 결합 완료: ${audioPath}`);
       
       // 전체 영상 길이 계산
       const totalDuration = scenes.reduce((sum, scene) => sum + (scene.duration || 4), 0);
