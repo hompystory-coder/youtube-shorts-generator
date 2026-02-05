@@ -1445,7 +1445,7 @@ class VideoRenderer {
       const totalDuration = scenes.reduce((sum, scene) => sum + (scene.duration || 4), 0);
       
       // FFmpeg로 최종 영상 생성
-      const videoId = `video_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const videoId = settings.videoId || `video_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       const outputVideoPath = path.join(OUTPUT_DIR, `${videoId}.mp4`);
       
       // 배경음악 처리

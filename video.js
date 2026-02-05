@@ -368,6 +368,9 @@ router.post('/generate', upload.fields([{ name: 'bgMusicFile' }, { name: 'bgImag
           console.log(`   장면 ${index + 1}: audioUrl = ${scene.audioUrl ? '✅ 있음' : '❌ 없음'}${scene.audioUrl ? ` (${scene.audioUrl.substring(scene.audioUrl.length - 30)})` : ''}`);
         });
         
+        // videoId를 settings에 추가 (Puppeteer 렌더러용)
+        settings.videoId = videoId;
+        
         const result = await videoRenderer.generateVideo(scenes, settings);
 
         // 완료 상태 업데이트
