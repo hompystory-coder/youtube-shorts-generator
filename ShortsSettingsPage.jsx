@@ -1944,7 +1944,7 @@ function ShortsSettingsPage() {
                     {/* 자막 */}
                     {subtitle.enabled && (
                       <div 
-                        className={`absolute w-full px-4 text-center ${titleStyle.animation !== 'none' ? `title-animation-${titleStyle.animation}` : ''}`}
+                        className={`absolute w-full px-4 text-center ${subtitle.animation !== 'none' ? `subtitle-animation-${subtitle.animation}` : ''}`}
                         style={{
                           ...(subtitle.position === 'top' && { top: '10%' }),
                           ...(subtitle.position === 'center' && { top: '50%', transform: 'translateY(-50%)' }),
@@ -1960,7 +1960,10 @@ function ShortsSettingsPage() {
                             -${subtitle.strokeWidth}px ${subtitle.strokeWidth}px 0 ${subtitle.strokeColor}
                           `,
                           lineHeight: 1.3,
-                          wordBreak: 'keep-all'
+                          wordBreak: 'keep-all',
+                          ...(subtitle.animation !== 'none' && {
+                            animationDuration: `${subtitle.animationDuration || 2.0}s`
+                          })
                         }}
                       >
                         이것은 자막입니다<br/>설정을 변경해보세요
