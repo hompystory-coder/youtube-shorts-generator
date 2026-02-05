@@ -1477,7 +1477,8 @@ class VideoRenderer {
         videoId,
         videoPath: outputVideoPath,
         size: stats.size,
-        url: `/outputs/videos/${videoId}.mp4`
+        url: `/outputs/videos/${videoId}.mp4`,
+        videoUrl: `/shorts-videos/outputs/videos/${videoId}.mp4` // 프론트엔드용 URL
       };
       
       console.log('🎉 Puppeteer 영상 생성 완료!');
