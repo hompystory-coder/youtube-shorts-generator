@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shorts Video Renderer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            width: 1080px;
+            height: 1920px;
+            overflow: hidden;
+            position: relative;
+            background: #000;
+        }
+
+        /* 배경 이미지 */
+        .background-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 1;
+        }
+
+        /* 장면 이미지 */
+        .scene-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 2;
+        }
+
+        /* 제목 컨테이너 */
+        .title-container {
+            position: absolute;
+            width: 100%;
+            z-index: 10;
+            text-align: center;
+            padding: 0 60px;
+        }
+
+        .title-container.top {
+            top: 150px;
+        }
+
+        .title-container.center {
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .title-container.bottom {
+            bottom: 150px;
+        }
+
+        /* 제목 텍스트 */
+        .title-text {
+            font-weight: bold;
+            line-height: 1.3;
+            word-break: keep-all;
+            display: inline-block;
+        }
+
+        /* 자막 컨테이너 */
+        .subtitle-container {
+            position: absolute;
+            width: 100%;
+            z-index: 11;
+            text-align: center;
+            padding: 0 60px;
+        }
+
+        .subtitle-container.top {
+            top: 300px;
+        }
+
+        .subtitle-container.center {
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .subtitle-container.bottom {
+            bottom: 300px;
+        }
+
+        /* 자막 텍스트 */
+        .subtitle-text {
+            font-weight: bold;
+            line-height: 1.4;
+            word-break: keep-all;
+            display: inline-block;
+        }
+
+        /* 워터마크 */
+        .watermark {
+            position: absolute;
+            z-index: 20;
+            opacity: 0.8;
+        }
+
+        .watermark.top-left {
+            top: 40px;
+            left: 40px;
+        }
+
+        .watermark.top-right {
+            top: 40px;
+            right: 40px;
+        }
+
+        .watermark.bottom-left {
+            bottom: 40px;
+            left: 40px;
+        }
+
+        .watermark.bottom-right {
+            bottom: 40px;
+            right: 40px;
+        }
+
+        /* 애니메이션: none */
+        .animation-none {
+            animation: none !important;
+        }
+
+        /* 애니메이션: fade-in */
+        @keyframes fade-in {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        .animation-fade-in {
+            animation: fade-in var(--animation-duration, 2s) ease-out forwards;
+        }
+
+        /* 애니메이션: slide-down (위→아래) */
+        @keyframes slide-down {
+            from {
+                opacity: 0;
+                transform: translateY(-100px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animation-slide-down {
+            animation: slide-down var(--animation-duration, 2s) ease-out forwards;
+        }
+
+        /* 애니메이션: slide-up (아래→위) */
+        @keyframes slide-up {
+            from {
+                opacity: 0;
+                transform: translateY(100px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animation-slide-up {
+            animation: slide-up var(--animation-duration, 2s) ease-out forwards;
+        }
+
+        /* 애니메이션: slide-right (좌→우) */
+        @keyframes slide-right {
+            from {
+                opacity: 0;
+                transform: translateX(-100px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .animation-slide-right {
+            animation: slide-right var(--animation-duration, 2s) ease-out forwards;
+        }
+
+        /* 애니메이션: slide-left (우→좌) */
+        @keyframes slide-left {
+            from {
+                opacity: 0;
+                transform: translateX(100px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .animation-slide-left {
+            animation: slide-left var(--animation-duration, 2s) ease-out forwards;
+        }
+
+        /* 애니메이션: zoom-in */
+        @keyframes zoom-in {
+            from {
+                opacity: 0;
+                transform: scale(0.5);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .animation-zoom-in {
+            animation: zoom-in var(--animation-duration, 2s) ease-out forwards;
+        }
+
+        /* 애니메이션: typing */
+        @keyframes typing {
+            from {
+                width: 0;
+            }
+            to {
+                width: 100%;
+            }
+        }
+
+        @keyframes blink-caret {
+            from, to {
+                border-color: transparent;
+            }
+            50% {
+                border-color: currentColor;
+            }
+        }
+
+        .animation-typing {
+            overflow: hidden;
+            white-space: nowrap;
+            border-right: 3px solid;
+            animation: 
+                typing var(--animation-duration, 2s) steps(40, end),
+                blink-caret 0.75s step-end infinite;
+        }
+    </style>
+</head>
+<body>
+    <!-- 배경 이미지 (있는 경우) -->
+    {{BACKGROUND_IMAGE}}
+
+    <!-- 장면 이미지 -->
+    {{SCENE_IMAGE}}
+
+    <!-- 제목 (있는 경우) -->
+    {{TITLE}}
+
+    <!-- 자막 (있는 경우) -->
+    {{SUBTITLE}}
+
+    <!-- 워터마크 (있는 경우) -->
+    {{WATERMARK}}
+</body>
+</html>
