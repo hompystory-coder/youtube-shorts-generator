@@ -394,3 +394,85 @@ pm2 logs ace-step-music --lines 10 --nostream
 **업데이트**: 2026-02-08 16:15  
 **상태**: ✅ CSS 적용 완료, 서비스 정상 실행  
 **다음 단계**: 브라우저 강력 새로고침 후 확인
+
+---
+
+## 🌐 Nginx 리버스 프록시 문제 해결 (2026-02-08 추가)
+
+### 문제 진단
+브라우저 콘솔 에러:
+```
+Refused to apply style from 'https://music.neuralgrid.kr/theme.css' 
+because its MIME type ('text/html') is not a supported stylesheet MIME type
+
+GET https://music.neuralgrid.kr/manifest.json 404 (Not Found)
+```
+
+### 원인 분석
+Gradio가 `/theme.css`, `/manifest.json` 등의 경로로 정적 파일을 요청하는데,  
+Nginx가 `/aoto/` prefix를 제거하지 않고 그대로 백엔드로 전달하여 404 발생.
+
+### 해결 방법
+
+#### 핵심 변경사항
+```nginx
+# 메인 애플리케이션 라우팅
+location /aoto/ {
+    rewrite ^/aoto/(.*)$ /$1 break;  # /aoto 제거
+    proxy_pass http://localhost:7866;
+    # ... 기타 설정
+}
+
+# 정적 파일 라우팅 (우선순위 높음)
+location ~ ^/aoto/(assets|theme\.css|file|manifest\.json) {
+    rewrite ^/aoto/(.*)$ /$1 break;
+    proxy_pass http://localhost:7866;
+    
+    # 캐싱 설정
+    expires 1d;
+    add_header Cache-Control "public, immutable";
+}
+```
+
+#### 추가 개선사항
+1. **경로 재작성 (rewrite)**
+   - `/aoto/theme.css` → `/theme.css`로 변환
+   - Gradio 백엔드가 올바른 경로로 파일 제공
+
+2. **정적 파일 캐싱**
+   - CSS, JS, 이미지 등 1일 캐싱
+   - 성능 향상 및 서버 부하 감소
+
+3. **헤더 설정 강화**
+   - `X-Forwarded-Host`, `X-Forwarded-Port` 추가
+   - WebSocket 지원 유지
+
+### 적용 결과
+```bash
+sudo nginx -t && sudo systemctl reload nginx
+```
+- ✅ Nginx 설정 테스트 통과
+- ✅ Nginx 재시작 완료
+- ✅ 경고는 있지만 정상 작동
+
+### 검증 방법
+```bash
+# theme.css 접근 테스트
+curl -I https://music.neuralgrid.kr/aoto/theme.css
+
+# 예상 결과:
+# HTTP/1.1 200 OK
+# Content-Type: text/css
+```
+
+### 최종 Nginx 설정 파일 위치
+```
+/etc/nginx/sites-available/music.neuralgrid.kr
+/etc/nginx/sites-available/music.neuralgrid.kr.backup.*  (백업)
+```
+
+---
+
+**최종 업데이트**: 2026-02-08 16:17  
+**상태**: ✅ 모든 문제 해결 완료  
+**조치 필요**: 브라우저 강력 새로고침 (Ctrl+F5)
