@@ -294,3 +294,103 @@ https://music.neuralgrid.kr/aoto
 **작성자**: GenSpark AI Developer  
 **최종 업데이트**: 2026-02-08  
 **버전**: 1.0
+
+---
+
+## 🔧 CSS 적용 문제 해결 (2026-02-08 추가)
+
+### 문제 진단
+사용자 스크린샷에서 CSS가 전혀 적용되지 않은 기본 Gradio UI가 표시됨.
+
+### 원인 분석
+Gradio 6.0에서 CSS 전달 방식이 변경됨:
+- ❌ 잘못된 방식: `gr.Blocks(css=...)`
+- ❌ 잘못된 방식: `demo.css = ...` 속성 설정
+- ✅ 올바른 방식: `demo.launch(css=...)`  파라미터 전달
+
+### 해결 과정
+
+#### 1단계: 문제 확인
+```bash
+ssh azamans@115.91.5.140 "ls -la /home/music/aoto/ACE-Step/acestep/ui/"
+# modern_theme.css 파일 존재 확인
+```
+
+#### 2단계: CSS 로딩 방식 수정
+```python
+# components.py
+def create_main_demo_ui(...):
+    # CSS 로드
+    import os
+    css_path = os.path.join(os.path.dirname(__file__), "modern_theme.css")
+    custom_css = ""
+    if os.path.exists(css_path):
+        with open(css_path, "r", encoding="utf-8") as f:
+            custom_css = f.read()
+    
+    with gr.Blocks() as demo:  # CSS 파라미터 제거
+        # ... UI 구성 ...
+    
+    # CSS를 demo 속성으로 저장
+    demo._custom_css = custom_css
+    return demo
+```
+
+#### 3단계: launch() 메서드에 CSS 전달
+```python
+# gui.py
+demo.launch(
+    server_name=server_name,
+    server_port=port,
+    share=share,
+    css=getattr(demo, "_custom_css", "")  # CSS 전달
+)
+```
+
+### 검증 결과
+```bash
+pm2 logs ace-step-music --lines 10 --nostream
+```
+- ✅ CSS 경고 메시지 없음
+- ✅ 서비스 정상 실행 (http://0.0.0.0:7866)
+- ✅ 에러 없음 (CUDA warning만 존재, 정상)
+
+### 사용자 확인 사항
+1. **브라우저 캐시 새로고침** (필수!)
+   - Windows/Linux: `Ctrl + F5`
+   - Mac: `Cmd + Shift + R`
+   
+2. **시크릿/프라이빗 모드로 테스트**
+   - 캐시 영향 제거
+
+3. **개발자 도구 확인** (F12)
+   - Console 탭에서 CSS 로딩 확인
+   - Network 탭에서 CSS 파일 다운로드 확인
+
+### 기대 효과
+- 🎨 Gradient 배경 (Indigo → Purple)
+- 💎 Glassmorphism 카드
+- ⚡ 부드러운 애니메이션
+- 🏷️ 배지 시스템
+- 🎯 모던한 버튼 & 입력 필드
+
+### 최종 파일 위치
+```
+/home/music/aoto/ACE-Step/acestep/ui/
+├── components.py          (수정됨 - CSS 로딩 및 속성 저장)
+├── modern_theme.css      (3.6KB CSS 파일)
+└── components.py.backup.* (백업 파일들)
+
+/home/music/aoto/ACE-Step/acestep/
+└── gui.py                 (수정됨 - launch(css=...) 추가)
+```
+
+### 참고 자료
+- [Gradio 6.0 Release Notes](https://github.com/gradio-app/gradio/releases)
+- [Gradio CSS 커스터마이징 가이드](https://gradio.app/guides/custom-CSS-and-JS)
+
+---
+
+**업데이트**: 2026-02-08 16:15  
+**상태**: ✅ CSS 적용 완료, 서비스 정상 실행  
+**다음 단계**: 브라우저 강력 새로고침 후 확인
